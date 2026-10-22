@@ -1,18 +1,40 @@
 /**
  * Core Algorithm Implementations for Hill Climb Racing.
  * 
- * 1. Sorting: Selection Sort & Insertion Sort for high-score leaderboard & distance records.
- * 2. Searching:
- *    - Binary Search (O(log n)): Locating nearest collectible / checkpoint in sorted position array.
- *    - Linear Search: Terrain height collision point lookup.
- * 3. Recursion:
- *    - Recursive combo bonus multiplier: Stunt combo chains (e.g. Backflip + Wheelie + Air Time).
- *    - Recursive fractal terrain displacement (Hills generation).
+ * ============================================================================
+ * KDU IT22013 DSA VIVA EVALUATION SHEET:
+ * ============================================================================
+ * 1. SORTING ALGORITHM: Selection Sort
+ *    - Purpose: Real-time sorting of High-Score Leaderboard records in descending order.
+ *    - Real-World Justification:
+ *      * Operates in-place with O(1) auxiliary memory.
+ *      * Performs the minimal number of memory writes/swaps: exactly (n - 1) swaps,
+ *        which is optimal when modifying persistent disk files or structured records.
+ *      * Highly deterministic and simple to trace during viva examinations.
+ *    - Time Complexity: Best: O(n²), Average: O(n²), Worst: O(n²).
+ *    - Space Complexity: O(1) in-place.
  * 
- * IT22013: Data Structures and Algorithms Mini Game
+ * 2. SEARCHING ALGORITHM: Binary Search
+ *    - Purpose: Logarithmic lookup of the next upcoming distance checkpoint milestone.
+ *    - Real-World Justification:
+ *      * Distance milestones (250m, 500m, 750m, 1000m, 1500m...) are naturally ordered.
+ *      * Reduces search time from O(n) to O(log n) every frame during distance updates.
+ *    - Time Complexity: O(log n).
+ *    - Space Complexity: O(1).
+ * 
+ * 3. RECURSION: Recursive Stunt Combo Bonus Evaluator
+ *    - Purpose: Calculates exponential bonus score when multiple stunts chain together.
+ *    - Base Case: comboDepth <= 1 returns base points.
+ *    - Recursive Step: bonus(n) = base + bonus(n - 1) * 1.5.
+ *    - Time Complexity: O(n) where n is chain depth.
+ *    - Space Complexity: O(n) call stack frames.
+ * ============================================================================
  */
 public class HillClimbAlgorithms {
 
+    /**
+     * High Score Leaderboard Record Model.
+     */
     public static class HighScoreRecord {
         private String playerName;
         private int distanceMeters;
@@ -33,9 +55,16 @@ public class HillClimbAlgorithms {
     }
 
     /**
-     * 1. SORTING: Selection Sort (Descending by Score).
-     * Time Complexity: O(n^2) Best, Average, Worst.
-     * Space Complexity: O(1) in-place.
+     * [ALGORITHM 1: SELECTION SORT]
+     * Sorts Leaderboard Records in Descending Order (Highest Score at Index 0).
+     * 
+     * How it works:
+     * 1. Finds the maximum element in the unsorted portion of the array.
+     * 2. Swaps it with the first unsorted position.
+     * 3. Repeats for all (count - 1) elements.
+     * 
+     * Time Complexity: O(n²) comparisons, O(n) swaps.
+     * Space Complexity: O(1) in-place auxiliary memory.
      */
     public static void selectionSortLeaderboard(HighScoreRecord[] records, int count) {
         for (int i = 0; i < count - 1; i++) {
@@ -54,10 +83,17 @@ public class HillClimbAlgorithms {
     }
 
     /**
-     * 2. SEARCHING: Binary Search on sorted Checkpoint / Distance thresholds.
+     * [ALGORITHM 2: BINARY SEARCH]
+     * Searches sorted milestone thresholds array to find the next target checkpoint.
+     * 
+     * How it works:
+     * 1. Divides the search interval in half every iteration.
+     * 2. If middle milestone > currentDistance, narrows search to left half to find closest.
+     * 3. Otherwise narrows search to right half.
+     * 
      * Time Complexity: O(log n).
      * Space Complexity: O(1).
-     * Finds the index of the nearest upcoming distance milestone (e.g., 250m, 500m, 1000m).
+     * @return index of next milestone, or -1 if passed all.
      */
     public static int binarySearchNextMilestone(int[] milestones, int count, int currentDistance) {
         int low = 0;
@@ -68,18 +104,21 @@ public class HillClimbAlgorithms {
             int mid = low + (high - low) / 2;
             if (milestones[mid] > currentDistance) {
                 resultIdx = mid;
-                high = mid - 1; // Look for closer milestone to the left
+                high = mid - 1; // Narrow to closer milestone on left
             } else {
-                low = mid + 1;
+                low = mid + 1;  // Narrow to right
             }
         }
         return resultIdx;
     }
 
     /**
-     * 3. SEARCHING: Linear Search for Ground Segment.
-     * Finds the terrain polygon or spline segment that spans the vehicle X coordinate.
+     * [ALGORITHM 3: LINEAR SEARCH]
+     * Finds the ground segment in terrain coordinate arrays that spans vehicle X.
+     * 
      * Time Complexity: O(n).
+     * Space Complexity: O(1).
+     * @return segment index, or -1 if outside bounds.
      */
     public static int linearSearchTerrainIndex(double[] xCoords, int count, double vehicleX) {
         for (int i = 0; i < count - 1; i++) {
@@ -91,30 +130,22 @@ public class HillClimbAlgorithms {
     }
 
     /**
-     * 4. RECURSION 1: Recursive Stunt Combo Multiplier.
-     * Calculates exponential combo bonus score based on chain depth.
-     * Base Case: comboDepth <= 1 returns base points.
-     * Recursive Step: bonus(n) = base + bonus(n - 1) * 1.5.
+     * [ALGORITHM 4: RECURSION]
+     * Evaluates exponential bonus score when multiple stunts chain together.
+     * 
+     * Recursive Formula:
+     * - Base Case: depth <= 1 -> returns basePoints.
+     * - Recursive Step: basePoints + recursiveComboBonus(depth - 1) * 1.5.
+     * 
+     * Time Complexity: O(n) where n is depth.
+     * Space Complexity: O(n) activation stack frames.
      */
     public static int recursiveComboBonus(int comboDepth, int basePoints) {
+        // Base Case: Terminal condition
         if (comboDepth <= 1) {
             return basePoints;
         }
+        // Recursive Call: Sub-problem evaluation
         return (int) (basePoints + recursiveComboBonus(comboDepth - 1, basePoints) * 1.5);
-    }
-
-    /**
-     * 5. RECURSION 2: Recursive Midpoint Displacement for Terrain Ruggedness.
-     * Generates natural fractal bumps and slopes between two elevation points.
-     */
-    public static void recursiveDisplace(double[] heights, int left, int right, double roughness) {
-        if (right - left <= 1) return;
-        int mid = (left + right) / 2;
-        double average = (heights[left] + heights[right]) / 2.0;
-        double variation = (Math.random() - 0.5) * roughness * (right - left);
-        heights[mid] = average + variation;
-
-        recursiveDisplace(heights, left, mid, roughness * 0.65);
-        recursiveDisplace(heights, mid, right, roughness * 0.65);
     }
 }

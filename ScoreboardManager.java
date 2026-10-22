@@ -4,35 +4,49 @@ import java.util.*;
 /**
  * Persistent Scoreboard and High Score Management System.
  * 
- * Features:
- * - Persists player best scores to 'leaderboard.txt'.
- * - Remembers last entered player name in 'last_player.txt'.
- * - Sorts records using Selection Sort from HillClimbAlgorithms (KDU IT22013 Viva Requirement).
- * - Tracks player ranks, personal bests, and updates high scores in real time.
+ * ============================================================================
+ * KDU IT22013 DSA VIVA EVALUATION SHEET:
+ * ============================================================================
+ * 1. Purpose: Manages persistent disk storage and high-score ranking.
+ * 2. Data Structures Used:
+ *    - Java List of HighScoreRecord models.
+ * 3. Algorithm Linkage:
+ *    - Calls HillClimbAlgorithms.selectionSortLeaderboard (O(n²)) to maintain
+ *      descending order sorted rankings in real-time.
+ * 4. File I/O:
+ *    - Reads and writes to 'leaderboard.txt'.
+ *    - Formatted as 'PlayerName:Score:DistanceMeters:TotalCoins'.
+ * ============================================================================
  */
 public class ScoreboardManager {
     private static final String LEADERBOARD_FILE = "leaderboard.txt";
-    private static final String LAST_PLAYER_FILE = "last_player.txt";
     private static final int MAX_SAVED_RECORDS = 50;
 
     private static final List<HillClimbAlgorithms.HighScoreRecord> records = new ArrayList<>();
     private static boolean initialized = false;
 
+    /**
+     * Initializes the scoreboard and loads saved records from disk.
+     */
     public static synchronized void init() {
         if (initialized) return;
         loadRecords();
         initialized = true;
     }
 
+    // =========================================================================
+    // [1] PERSISTENT FILE I/O (LOAD & SAVE)
+    // =========================================================================
+
     /**
-     * Loads high score records from file or seeds initial leaderboard.
+     * Loads high score records from 'leaderboard.txt' or seeds initial champions.
      */
     private static synchronized void loadRecords() {
         records.clear();
         File file = new File(LEADERBOARD_FILE);
 
         if (!file.exists()) {
-            // Seed with realistic starting leaderboard records
+            // Seed default hall of fame records if file does not exist
             records.add(new HillClimbAlgorithms.HighScoreRecord("Speed_Demon", 1250, 4200, 58200));
             records.add(new HillClimbAlgorithms.HighScoreRecord("KDU_Champion", 980, 3100, 42100));
             records.add(new HillClimbAlgorithms.HighScoreRecord("Rider_Alex", 640, 1850, 24500));
@@ -57,14 +71,14 @@ public class ScoreboardManager {
                 }
             }
         } catch (Exception e) {
-            System.err.println("Notice: Could not load leaderboard from file, using memory storage: " + e.getMessage());
+            System.err.println("Notice: Using memory storage: " + e.getMessage());
         }
 
         sortRecords();
     }
 
     /**
-     * Saves sorted records to file.
+     * Saves sorted records back to 'leaderboard.txt'.
      */
     private static synchronized void saveRecords() {
         try (PrintWriter writer = new PrintWriter(new FileWriter(LEADERBOARD_FILE))) {
@@ -78,8 +92,12 @@ public class ScoreboardManager {
         }
     }
 
+    // =========================================================================
+    // [2] SELECTION SORT INTEGRATION (DSA REQUIREMENT)
+    // =========================================================================
+
     /**
-     * Sorts leaderboard using Selection Sort algorithm from HillClimbAlgorithms.
+     * Sorts leaderboard records using Selection Sort from HillClimbAlgorithms (O(n²)).
      */
     public static synchronized void sortRecords() {
         if (records.isEmpty()) return;
@@ -91,9 +109,13 @@ public class ScoreboardManager {
         }
     }
 
+    // =========================================================================
+    // [3] SCORE RECORDING & STATS LOOKUP
+    // =========================================================================
+
     /**
      * Records or updates a player's score.
-     * @return true if this was a new personal best score or new entry, false otherwise.
+     * @return true if this was a new personal best score, false otherwise.
      */
     public static synchronized boolean recordScore(String playerName, int score, int distanceMeters, int coins) {
         init();
@@ -101,7 +123,6 @@ public class ScoreboardManager {
             playerName = "Driver";
         }
         playerName = playerName.trim();
-        saveLastPlayerName(playerName);
 
         boolean isNewBest = false;
         int existingIdx = -1;
@@ -136,13 +157,14 @@ public class ScoreboardManager {
     }
 
     /**
-     * Retrieves the best score for a specific player.
+     * Retrieves the best score for a specific player name.
      */
     public static synchronized int getPlayerBestScore(String playerName) {
         init();
-        if (playerName == null) return 0;
+        if (playerName == null || playerName.trim().isEmpty()) return 0;
+        String target = playerName.trim();
         for (HillClimbAlgorithms.HighScoreRecord rec : records) {
-            if (rec.getPlayerName().equalsIgnoreCase(playerName.trim())) {
+            if (rec.getPlayerName().equalsIgnoreCase(target)) {
                 return rec.getScore();
             }
         }
@@ -150,13 +172,15 @@ public class ScoreboardManager {
     }
 
     /**
-     * Retrieves the 1-based leaderboard rank for a player.
+     * Gets 1-based leaderboard rank for a player.
+     * @return rank position (1 for 1st place), or -1 if unranked.
      */
     public static synchronized int getPlayerRank(String playerName) {
         init();
-        if (playerName == null) return -1;
+        if (playerName == null || playerName.trim().isEmpty()) return -1;
+        String target = playerName.trim();
         for (int i = 0; i < records.size(); i++) {
-            if (records.get(i).getPlayerName().equalsIgnoreCase(playerName.trim())) {
+            if (records.get(i).getPlayerName().equalsIgnoreCase(target)) {
                 return i + 1;
             }
         }
@@ -164,7 +188,7 @@ public class ScoreboardManager {
     }
 
     /**
-     * Returns top records up to maxCount.
+     * Returns top N records for leaderboard display.
      */
     public static synchronized List<HillClimbAlgorithms.HighScoreRecord> getTopRecords(int maxCount) {
         init();
@@ -174,31 +198,5 @@ public class ScoreboardManager {
             list.add(records.get(i));
         }
         return list;
-    }
-
-    /**
-     * Gets the last entered driver name.
-     */
-    public static synchronized String getLastPlayerName() {
-        File file = new File(LAST_PLAYER_FILE);
-        if (file.exists()) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                String line = reader.readLine();
-                if (line != null && !line.trim().isEmpty()) {
-                    return line.trim();
-                }
-            } catch (Exception ignored) {}
-        }
-        return "";
-    }
-
-    /**
-     * Saves the last entered driver name.
-     */
-    public static synchronized void saveLastPlayerName(String playerName) {
-        if (playerName == null || playerName.trim().isEmpty()) return;
-        try (PrintWriter writer = new PrintWriter(new FileWriter(LAST_PLAYER_FILE))) {
-            writer.println(playerName.trim());
-        } catch (Exception ignored) {}
     }
 }

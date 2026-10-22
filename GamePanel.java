@@ -33,7 +33,7 @@ public class GamePanel extends JPanel {
 
     private GameState gameState = GameState.LOGIN;
     private GameState previousState = GameState.LOGIN;
-    private String playerName = "Rider_Alex";
+    private String playerName = "Driver";
     private int playerBestScore = 0;
     private boolean isNewBestRecord = false;
     private boolean scoreRecorded = false;
@@ -108,7 +108,6 @@ public class GamePanel extends JPanel {
         String input = nameField.getText().trim();
         if (input.isEmpty()) input = "Driver";
         playerName = input;
-        ScoreboardManager.saveLastPlayerName(playerName);
         playerBestScore = ScoreboardManager.getPlayerBestScore(playerName);
 
         nameField.setVisible(false);
