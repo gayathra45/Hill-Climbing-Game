@@ -19,28 +19,25 @@ import java.awt.geom.*;
  */
 public class DashboardHUD {
 
-    public static final int PAUSE_BTN_W = 36;
-    public static final int PAUSE_BTN_H = 36;
-    public static final int PAUSE_BTN_Y = 92;
-
-    public static final int TROPHY_BTN_W = 36;
-    public static final int TROPHY_BTN_H = 36;
+    public static final int BTN_ROW_Y = 108;
+    public static final int BTN_ROW_H = 36;
+    public static final int ACTION_BTN_W = 70;
 
     public static final int PEDAL_W = 78;
     public static final int PEDAL_H = 112;
     public static final int PEDAL_MARGIN_X = 35;
     public static final int PEDAL_MARGIN_BOTTOM = 24;
 
-    public static boolean isPauseButtonClicked(int screenW, int mouseX, int mouseY) {
-        int px = screenW - 55;
-        int py = PAUSE_BTN_Y;
-        return mouseX >= px && mouseX <= px + PAUSE_BTN_W && mouseY >= py && mouseY <= py + PAUSE_BTN_H;
+    public static boolean isTrophyButtonClicked(int screenW, int mouseX, int mouseY) {
+        int tx = screenW - 175;
+        int ty = BTN_ROW_Y;
+        return mouseX >= tx && mouseX <= tx + ACTION_BTN_W && mouseY >= ty && mouseY <= ty + BTN_ROW_H;
     }
 
-    public static boolean isTrophyButtonClicked(int screenW, int mouseX, int mouseY) {
-        int tx = screenW - 98;
-        int ty = PAUSE_BTN_Y;
-        return mouseX >= tx && mouseX <= tx + TROPHY_BTN_W && mouseY >= ty && mouseY <= ty + TROPHY_BTN_H;
+    public static boolean isPauseButtonClicked(int screenW, int mouseX, int mouseY) {
+        int px = screenW - 95;
+        int py = BTN_ROW_Y;
+        return mouseX >= px && mouseX <= px + ACTION_BTN_W && mouseY >= py && mouseY <= py + BTN_ROW_H;
     }
 
     public static boolean isBrakePedalHovered(int screenH, int mouseX, int mouseY) {
@@ -395,46 +392,77 @@ public class DashboardHUD {
         g2.setColor(new Color(34, 197, 94));
         g2.fillPolygon(new int[]{x + 12, x + 20, x + 28}, new int[]{my + 26, my + 11, my + 26}, 3);
 
-        // Leaderboard Trophy Button "🏆"
-        int tx = screenW - 98;
-        int ty = PAUSE_BTN_Y;
-        g2.setColor(new Color(15, 23, 42, 215));
-        g2.fillRoundRect(tx, ty, TROPHY_BTN_W, TROPHY_BTN_H, 10, 10);
-        g2.setColor(new Color(251, 191, 36, 160));
-        g2.drawRoundRect(tx, ty, TROPHY_BTN_W, TROPHY_BTN_H, 10, 10);
+        // Row of 2 Action Buttons (Leaderboard & Pause) aligned symmetrically under the milestone pills:
+        // Column bounds: x from (screenW - 175) to (screenW - 25), exactly 150px wide, zero overlap!
+        int by = y + 88; // 20 + 88 = 108 (starts 8px below the second milestone pill which ends at 100)
+        int btnW = 70;
+        int btnH = 36;
 
-        // Gold Trophy Icon
-        g2.setColor(new Color(251, 191, 36));
-        g2.fillRoundRect(tx + 11, ty + 9, 14, 11, 4, 4);
-        g2.fillRect(tx + 16, ty + 20, 4, 5);
-        g2.fillRect(tx + 12, ty + 25, 12, 3);
-        g2.setStroke(new BasicStroke(1.8f));
-        g2.drawArc(tx + 7, ty + 10, 5, 7, 90, 180);
-        g2.drawArc(tx + 24, ty + 10, 5, 7, -90, 180);
+        // Button 1: Leaderboard Trophy Button (Left)
+        int tx = x; // screenW - 175
+        int ty = by;
+        g2.setColor(new Color(15, 23, 42, 215));
+        g2.fillRoundRect(tx, ty, btnW, btnH, 12, 12);
+        g2.setColor(new Color(251, 191, 36, 170));
+        g2.setStroke(new BasicStroke(1.2f));
+        g2.drawRoundRect(tx, ty, btnW, btnH, 12, 12);
         g2.setStroke(new BasicStroke(1.0f));
 
-        // Pause / Play Button
-        int px = screenW - 55;
-        int py = PAUSE_BTN_Y;
+        // Subtle top highlight
+        g2.setColor(new Color(255, 255, 255, 30));
+        g2.fillRoundRect(tx + 2, ty + 2, btnW - 4, btnH / 2 - 2, 10, 10);
+
+        // Gold Trophy Icon (Centered left)
+        int icx = tx + 10;
+        int icy = ty + 9;
+        g2.setColor(new Color(251, 191, 36));
+        g2.fillRoundRect(icx + 3, icy, 12, 9, 3, 3);
+        g2.fillRect(icx + 7, icy + 9, 4, 5);
+        g2.fillRect(icx + 3, icy + 14, 12, 3);
+        g2.setStroke(new BasicStroke(1.5f));
+        g2.drawArc(icx, icy + 1, 4, 6, 90, 180);
+        g2.drawArc(icx + 14, icy + 1, 4, 6, -90, 180);
+        g2.setStroke(new BasicStroke(1.0f));
+
+        // Label: "TOP"
+        g2.setFont(new Font("Impact", Font.BOLD, 13));
+        g2.setColor(new Color(253, 224, 71));
+        g2.drawString("TOP", tx + 34, ty + 23);
+
+        // Button 2: Pause / Play Button (Right)
+        int px = x + btnW + 10; // screenW - 175 + 70 + 10 = screenW - 95
+        int py = by;
         g2.setColor(new Color(15, 23, 42, 215));
-        g2.fillRoundRect(px, py, PAUSE_BTN_W, PAUSE_BTN_H, 10, 10);
-        g2.setColor(new Color(255, 255, 255, 45));
-        g2.drawRoundRect(px, py, PAUSE_BTN_W, PAUSE_BTN_H, 10, 10);
+        g2.fillRoundRect(px, py, btnW, btnH, 12, 12);
+        g2.setColor(new Color(56, 189, 248, 150));
+        g2.setStroke(new BasicStroke(1.2f));
+        g2.drawRoundRect(px, py, btnW, btnH, 12, 12);
+        g2.setStroke(new BasicStroke(1.0f));
+
+        // Subtle top highlight
+        g2.setColor(new Color(255, 255, 255, 30));
+        g2.fillRoundRect(px + 2, py + 2, btnW - 4, btnH / 2 - 2, 10, 10);
 
         if (!isPaused) {
             // "||" Pause Bars
             g2.setColor(Color.WHITE);
-            g2.fillRect(px + 10, py + 9, 5, 18);
-            g2.fillRect(px + 21, py + 9, 5, 18);
+            g2.fillRect(px + 12, py + 10, 4, 16);
+            g2.fillRect(px + 20, py + 10, 4, 16);
+            g2.setFont(new Font("Impact", Font.BOLD, 12));
+            g2.setColor(Color.WHITE);
+            g2.drawString("PAUSE", px + 30, py + 23);
         } else {
             // ">" Play Triangle (Green)
             g2.setColor(new Color(74, 222, 128));
             Polygon playTriangle = new Polygon(
-                new int[]{px + 12, px + 27, px + 12},
-                new int[]{py + 9, py + 18, py + 27},
+                new int[]{px + 12, px + 24, px + 12},
+                new int[]{py + 10, py + 18, py + 26},
                 3
             );
             g2.fillPolygon(playTriangle);
+            g2.setFont(new Font("Impact", Font.BOLD, 12));
+            g2.setColor(new Color(74, 222, 128));
+            g2.drawString("RESUME", px + 28, py + 23);
         }
     }
 
