@@ -218,15 +218,18 @@ public class GamePanel extends JPanel {
                         stuntDisplayTimer = 50;
                         score += 100;
                         particles.addCoinSparkles(c.getX(), c.getY());
+                        particles.addFloatingText(c.getX(), c.getY() - 12, "+FUEL", new Color(56, 189, 248));
                     } else if (c.getType() == Collectible.Type.BONUS_STAR) {
                         score += 500;
                         currentStunt = "STAR BONUS! +500 PTS";
                         stuntDisplayTimer = 50;
                         particles.addCoinSparkles(c.getX(), c.getY());
+                        particles.addFloatingText(c.getX(), c.getY() - 12, "+500", new Color(244, 114, 182));
                     } else {
                         coins += c.getValue();
                         score += c.getValue() * 10;
                         particles.addCoinSparkles(c.getX(), c.getY());
+                        particles.addFloatingText(c.getX(), c.getY() - 12, "+" + c.getValue(), new Color(253, 224, 71));
                     }
                 }
             }
