@@ -262,9 +262,9 @@ public class DashboardHUD {
         g2.drawRoundRect(x, vy, 190, 26, 13, 13);
         g2.setStroke(new BasicStroke(1));
 
-        g2.setFont(new Font("Impact", Font.BOLD, 11));
+        g2.setFont(new Font("Impact", Font.BOLD, 12));
         g2.setColor(new Color(251, 191, 36));
-        g2.drawString("[V]", x + 10, vy + 18);
+        g2.drawString("V", x + 10, vy + 18);
         g2.setColor(new Color(241, 245, 249));
         g2.drawString(vehicle.currentType.displayName, x + 30, vy + 18);
 
@@ -715,9 +715,9 @@ public class DashboardHUD {
     }
 
     private static void drawControlsHint(Graphics2D g2, int screenW, int screenH) {
-        g2.setFont(new Font("Impact", Font.PLAIN, 12));
-        g2.setColor(new Color(15, 23, 42, 180));
-        g2.drawString("CONTROLS: [RIGHT/D / MOUSE PEDAL] GAS  |  [LEFT/A / MOUSE PEDAL] BRAKE  |  [P / MOUSE] PAUSE  |  [SPACE] BOOST  |  [V] SWITCH  |  [R] RESTART", 20, screenH - 12);
+        g2.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        g2.setColor(new Color(15, 23, 42, 220));
+        g2.drawString("CONTROLS: GAS (Right/D)  |  BRAKE (Left/A)  |  PAUSE (P/Esc)  |  BOOST (Space)  |  VEHICLE (V)  |  RESTART (R)", 20, screenH - 10);
     }
 
     public static void drawPauseOverlay(Graphics2D g2, int screenW, int screenH) {
@@ -963,6 +963,23 @@ public class DashboardHUD {
         g2.drawString(hint, mx + (mw - fm.stringWidth(hint)) / 2, my + 342);
     }
 
+    public static void drawVectorStar(Graphics2D g2, int cx, int cy, int outerR, int innerR, Color fill, Color stroke) {
+        Polygon star = new Polygon();
+        for (int i = 0; i < 10; i++) {
+            double angle = -Math.PI / 2 + i * Math.PI / 5;
+            int r = (i % 2 == 0) ? outerR : innerR;
+            int x = (int) Math.round(cx + r * Math.cos(angle));
+            int y = (int) Math.round(cy + r * Math.sin(angle));
+            star.addPoint(x, y);
+        }
+        g2.setColor(fill);
+        g2.fillPolygon(star);
+        if (stroke != null) {
+            g2.setColor(stroke);
+            g2.drawPolygon(star);
+        }
+    }
+
     public static void drawScoreboardOverlay(Graphics2D g2, int screenW, int screenH, String currentPlayerName) {
         // Darkened glassmorphic backdrop
         g2.setColor(new Color(15, 23, 42, 230));
@@ -991,12 +1008,18 @@ public class DashboardHUD {
         g2.drawRoundRect(mx, my, mw, mh, 28, 28);
         g2.setStroke(new BasicStroke(1.0f));
 
-        // Header Title
+        // Header Title with Dual Vector Gold Stars
         g2.setFont(new Font("Impact", Font.BOLD, 32));
         g2.setColor(new Color(253, 224, 71));
         FontMetrics fm = g2.getFontMetrics();
         String title = "ALL-TIME HIGH SCORE LEADERBOARD";
-        g2.drawString(title, mx + (mw - fm.stringWidth(title)) / 2, my + 44);
+        int tStrW = fm.stringWidth(title);
+        int titleX = mx + (mw - tStrW) / 2;
+        g2.drawString(title, titleX, my + 44);
+
+        // Left and Right Vector Gold Stars
+        drawVectorStar(g2, titleX - 22, my + 33, 11, 5, new Color(251, 191, 36), new Color(217, 119, 6));
+        drawVectorStar(g2, titleX + tStrW + 22, my + 33, 11, 5, new Color(251, 191, 36), new Color(217, 119, 6));
 
         // Subtitle: Algorithm mention for KDU DSA viva
         g2.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -1041,29 +1064,56 @@ public class DashboardHUD {
                 g2.fillRoundRect(mx + 25, rowY, mw - 50, 34, 8, 8);
             }
 
-            // Rank Badge
+            // High-Contrast Clear Rank Badges
+            int rx = mx + 40;
+            int rw = 44;
+            int rh = 24;
+            int ry = rowY + 5;
+
             if (i == 0) {
-                g2.setColor(new Color(251, 191, 36)); // Gold
-                g2.fillRoundRect(mx + 38, rowY + 6, 52, 22, 6, 6);
+                // 1st Gold Medal Badge
+                GradientPaint gP = new GradientPaint(rx, ry, new Color(251, 191, 36), rx, ry + rh, new Color(217, 119, 6));
+                g2.setPaint(gP);
+                g2.fillRoundRect(rx, ry, rw, rh, 8, 8);
+                g2.setColor(new Color(254, 240, 138));
+                g2.drawRoundRect(rx, ry, rw, rh, 8, 8);
                 g2.setColor(new Color(15, 23, 42));
-                g2.setFont(new Font("Impact", Font.BOLD, 13));
-                g2.drawString("#1 GOLD", mx + 43, rowY + 22);
-            } else if (i == 1) {
-                g2.setColor(new Color(226, 232, 240)); // Silver
-                g2.fillRoundRect(mx + 38, rowY + 6, 56, 22, 6, 6);
-                g2.setColor(new Color(15, 23, 42));
-                g2.setFont(new Font("Impact", Font.BOLD, 13));
-                g2.drawString("#2 SLVR", mx + 43, rowY + 22);
-            } else if (i == 2) {
-                g2.setColor(new Color(217, 119, 6)); // Bronze
-                g2.fillRoundRect(mx + 38, rowY + 6, 56, 22, 6, 6);
-                g2.setColor(Color.WHITE);
-                g2.setFont(new Font("Impact", Font.BOLD, 13));
-                g2.drawString("#3 BRNZ", mx + 43, rowY + 22);
-            } else {
-                g2.setColor(new Color(148, 163, 184));
                 g2.setFont(new Font("Impact", Font.BOLD, 15));
-                g2.drawString("#" + (i + 1), mx + 54, rowY + 23);
+                FontMetrics rfm = g2.getFontMetrics();
+                String rTxt = "1st";
+                g2.drawString(rTxt, rx + (rw - rfm.stringWidth(rTxt)) / 2, ry + 17);
+            } else if (i == 1) {
+                // 2nd Silver Medal Badge
+                GradientPaint sP = new GradientPaint(rx, ry, new Color(241, 245, 249), rx, ry + rh, new Color(148, 163, 184));
+                g2.setPaint(sP);
+                g2.fillRoundRect(rx, ry, rw, rh, 8, 8);
+                g2.setColor(Color.WHITE);
+                g2.drawRoundRect(rx, ry, rw, rh, 8, 8);
+                g2.setColor(new Color(15, 23, 42));
+                g2.setFont(new Font("Impact", Font.BOLD, 15));
+                FontMetrics rfm = g2.getFontMetrics();
+                String rTxt = "2nd";
+                g2.drawString(rTxt, rx + (rw - rfm.stringWidth(rTxt)) / 2, ry + 17);
+            } else if (i == 2) {
+                // 3rd Bronze Medal Badge
+                GradientPaint bP = new GradientPaint(rx, ry, new Color(249, 115, 22), rx, ry + rh, new Color(154, 52, 18));
+                g2.setPaint(bP);
+                g2.fillRoundRect(rx, ry, rw, rh, 8, 8);
+                g2.setColor(new Color(254, 215, 170));
+                g2.drawRoundRect(rx, ry, rw, rh, 8, 8);
+                g2.setColor(Color.WHITE);
+                g2.setFont(new Font("Impact", Font.BOLD, 15));
+                FontMetrics rfm = g2.getFontMetrics();
+                String rTxt = "3rd";
+                g2.drawString(rTxt, rx + (rw - rfm.stringWidth(rTxt)) / 2, ry + 17);
+            } else {
+                g2.setColor(new Color(30, 41, 59, 180));
+                g2.fillRoundRect(rx, ry, rw, rh, 8, 8);
+                g2.setColor(new Color(148, 163, 184));
+                g2.setFont(new Font("Impact", Font.PLAIN, 15));
+                FontMetrics rfm = g2.getFontMetrics();
+                String rTxt = "#" + (i + 1);
+                g2.drawString(rTxt, rx + (rw - rfm.stringWidth(rTxt)) / 2, ry + 17);
             }
 
             // Driver Name
@@ -1108,8 +1158,27 @@ public class DashboardHUD {
         g2.setFont(new Font("Impact", Font.BOLD, 18));
         g2.setColor(Color.WHITE);
         fm = g2.getFontMetrics();
-        String closeTxt = "CLOSE LEADERBOARD [ESC]";
-        g2.drawString(closeTxt, bx + (bw - fm.stringWidth(closeTxt)) / 2, by + 27);
+        String closeTxt = "CLOSE LEADERBOARD";
+        int cStrW = fm.stringWidth(closeTxt);
+        int cTotal = cStrW + 18;
+        int cStart = bx + (bw - cTotal) / 2;
+        g2.drawString(closeTxt, cStart, by + 27);
+
+        // Vector 'X' icon inside button
+        int xx = cStart + cStrW + 6;
+        int xy = by + 16;
+        g2.setColor(Color.WHITE);
+        g2.setStroke(new BasicStroke(2.2f));
+        g2.drawLine(xx, xy, xx + 8, xy + 8);
+        g2.drawLine(xx + 8, xy, xx, xy + 8);
+        g2.setStroke(new BasicStroke(1.0f));
+
+        // Subtitle hint for keyboard
+        g2.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        g2.setColor(new Color(148, 163, 184));
+        fm = g2.getFontMetrics();
+        String escHint = "Click button or press ESC to return";
+        g2.drawString(escHint, mx + (mw - fm.stringWidth(escHint)) / 2, my + mh - 6);
     }
 
     public static void drawGameOverScreen(Graphics2D g2, int screenW, int screenH, String reason, 
@@ -1189,44 +1258,45 @@ public class DashboardHUD {
         g2.setColor(new Color(253, 224, 71));
         g2.drawString("ALL-TIME BEST: " + String.format("%,d", bestScore), gx + 240, gy + 80);
 
-        // 3 Action Buttons:
+        // Action Buttons:
         int bw = 155;
         int bh = 42;
         int by = my + mh - 65;
         int b1x = mx + 30;
 
-        // [R] PLAY AGAIN
+        // PLAY AGAIN (R)
         GradientPaint pGrad = new GradientPaint(b1x, by, new Color(34, 197, 94), b1x, by + bh, new Color(22, 163, 74));
         g2.setPaint(pGrad);
         g2.fillRoundRect(b1x, by, bw, bh, 14, 14);
         g2.setColor(Color.WHITE);
-        g2.setFont(new Font("Impact", Font.BOLD, 16));
+        g2.setFont(new Font("Impact", Font.BOLD, 15));
         fm = g2.getFontMetrics();
-        g2.drawString("[R] PLAY AGAIN", b1x + (bw - fm.stringWidth("[R] PLAY AGAIN")) / 2, by + 27);
+        String rTxt = "PLAY AGAIN (R)";
+        g2.drawString(rTxt, b1x + (bw - fm.stringWidth(rTxt)) / 2, by + 27);
 
-        // [L] SCORES
+        // SCORES (L)
         int b2x = b1x + 175;
         GradientPaint lGrad = new GradientPaint(b2x, by, new Color(217, 119, 6), b2x, by + bh, new Color(180, 83, 9));
         g2.setPaint(lGrad);
         g2.fillRoundRect(b2x, by, bw, bh, 14, 14);
         g2.setColor(Color.WHITE);
-        g2.setFont(new Font("Impact", Font.BOLD, 16));
+        g2.setFont(new Font("Impact", Font.BOLD, 15));
         fm = g2.getFontMetrics();
-        String lTxt = "[L] SCORES";
+        String lTxt = "SCORES (L)";
         int lStrW = fm.stringWidth(lTxt);
-        int lTotal = lStrW + 18;
+        int lTotal = lStrW + 16;
         int lStartX = b2x + (bw - lTotal) / 2;
         g2.drawString(lTxt, lStartX, by + 27);
 
         // Vector Gold Trophy
-        int tx = lStartX + lStrW + 6;
-        int ty = by + 14;
+        int tx = lStartX + lStrW + 5;
+        int ty = by + 15;
         g2.setColor(new Color(253, 224, 71));
         g2.fillRoundRect(tx + 1, ty, 8, 6, 2, 2);
         g2.fillRect(tx + 3, ty + 6, 4, 3);
         g2.fillRect(tx + 1, ty + 9, 8, 2);
 
-        // [C] CHANGE DRIVER
+        // CHANGE DRIVER (C)
         int b3x = b2x + 175;
         GradientPaint cGrad = new GradientPaint(b3x, by, new Color(59, 130, 246), b3x, by + bh, new Color(29, 78, 216));
         g2.setPaint(cGrad);
@@ -1234,15 +1304,15 @@ public class DashboardHUD {
         g2.setColor(Color.WHITE);
         g2.setFont(new Font("Impact", Font.BOLD, 15));
         fm = g2.getFontMetrics();
-        String cTxt = "[C] DRIVER";
+        String cTxt = "DRIVER (C)";
         int cStrW = fm.stringWidth(cTxt);
-        int cTotal = cStrW + 18;
+        int cTotal = cStrW + 16;
         int cStart = b3x + (bw - cTotal) / 2;
         g2.drawString(cTxt, cStart, by + 27);
 
-        // Vector Driver/User Icon
+        // Vector Driver Avatar Icon
         int ux = cStart + cStrW + 5;
-        int uy = by + 13;
+        int uy = by + 14;
         g2.setColor(new Color(253, 224, 71));
         g2.fillOval(ux + 2, uy, 7, 7);
         g2.fillArc(ux, uy + 6, 11, 8, 0, 180);
