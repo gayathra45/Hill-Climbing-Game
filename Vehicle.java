@@ -391,11 +391,22 @@ public class Vehicle {
             wasAirborne = true;
         }
 
-        // 4. ENGINE POWER, TORQUE & WEIGHT TRANSFER (Natural Wheelie on Acceleration)
+        // 4. ENGINE POWER, TORQUE & HIGH-DIFFICULTY RAPID FUEL CONSUMPTION
         double currentSlope = terrain.getSlopeAt(x);
 
+        // High Fuel Consumption (Difficult Mode: Fuel drains fast!)
+        if (fuel > 0) {
+            double drain = 0.055; // Base idle engine burn (~3.3% per sec)
+            if (gasInput) {
+                drain += 0.165;   // Heavy throttle burn (~13.2% per sec: full tank empties in ~7.5 seconds!)
+            }
+            if (isBoosting) {
+                drain += 0.200;   // Nitro boost burn (~25.2% per sec!)
+            }
+            fuel = Math.max(0.0, fuel - drain);
+        }
+
         if (gasInput && fuel > 0) {
-            fuel = Math.max(0, fuel - 0.026);
             rpm = Math.min(7800, rpm + 120);
 
             if (onGround) {

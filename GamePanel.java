@@ -60,6 +60,7 @@ public class GamePanel extends JPanel {
     private boolean gameOver = false;
     private String gameOverReason = "";
     private int crashAnimationTimer = 85;
+    private int outOfFuelCountdown = 0;
 
     public GamePanel() {
         setLayout(null);
@@ -206,6 +207,7 @@ public class GamePanel extends JPanel {
         gameOver = false;
         gameOverReason = "";
         crashAnimationTimer = 85;
+        outOfFuelCountdown = 0;
         isPaused = false;
         scoreRecorded = false;
         isNewBestRecord = false;
@@ -583,9 +585,19 @@ public class GamePanel extends JPanel {
                     gameOver = true;
                     gameOverReason = "DRIVER DOWN! ACCIDENT";
                 }
-            } else if (vehicle.fuel <= 0 && Math.abs(vehicle.vx) < 0.1 && vehicle.rearGrounded) {
-                gameOver = true;
-                gameOverReason = "OUT OF FUEL!";
+            } else if (vehicle.fuel <= 0) {
+                if (Math.abs(vehicle.vx) < 0.25 || outOfFuelCountdown > 100) {
+                    gameOver = true;
+                    gameOverReason = "OUT OF FUEL!";
+                } else {
+                    outOfFuelCountdown++;
+                    if (outOfFuelCountdown % 18 == 0) {
+                        particles.addDarkCrashSmoke(vehicle.x, vehicle.y - 10);
+                        particles.addFloatingText(vehicle.x, vehicle.y - 30, "OUT OF FUEL!", new Color(239, 68, 68));
+                    }
+                }
+            } else {
+                outOfFuelCountdown = 0;
             }
         }
 
