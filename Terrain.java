@@ -48,12 +48,17 @@ public class Terrain {
     private double animTime = 0;
 
     public Terrain() {
-        // Wooden rope bridges spanning scenic ravines
-        bridges.add(new Bridge(580, 480, 960, 500));
-        bridges.add(new Bridge(2200, 485, 2600, 475));
-        bridges.add(new Bridge(4100, 490, 4550, 485));
-        bridges.add(new Bridge(6200, 480, 6680, 495));
-        bridges.add(new Bridge(8500, 490, 9000, 480));
+        // Dynamically initialize bridges to match advanced hill elevations seamlessly
+        double b1s = 580, b1e = 960;
+        bridges.add(new Bridge(b1s, getBaseHeight(b1s), b1e, getBaseHeight(b1e)));
+        double b2s = 2200, b2e = 2600;
+        bridges.add(new Bridge(b2s, getBaseHeight(b2s), b2e, getBaseHeight(b2e)));
+        double b3s = 4100, b3e = 4550;
+        bridges.add(new Bridge(b3s, getBaseHeight(b3s), b3e, getBaseHeight(b3e)));
+        double b4s = 6200, b4e = 6680;
+        bridges.add(new Bridge(b4s, getBaseHeight(b4s), b4e, getBaseHeight(b4e)));
+        double b5s = 8500, b5e = 9000;
+        bridges.add(new Bridge(b5s, getBaseHeight(b5s), b5e, getBaseHeight(b5e)));
 
         for (int i = 0; i < 50; i++) {
             upcomingChunkQueue.enqueue(i * 250.0);
@@ -61,31 +66,33 @@ public class Terrain {
     }
 
     /**
-     * Exciting, smooth rolling hills mathematical height profile:
-     * - Flat starting runway for smooth launch.
-     * - Gentle rolling hill crests for soaring air-time jumps.
-     * - Challenging slope climbs and valley dips.
+     * Advanced continuous height function with dramatic topography:
+     * - Flat starting straightaway.
+     * - Thrilling rolling climbs, rollercoaster dips, launch crests, and steep hillclimb challenges.
      */
+    public double getBaseHeight(double x) {
+        double base = 480.0;
+
+        // Flat starting straightaway
+        if (x < 240) {
+            return base + Math.sin(x * 0.006) * 5.0;
+        }
+
+        // Advanced undulating landscape with multi-tier elevation:
+        double mountain = Math.sin(x * 0.00085) * 85.0;  // Grand elevation rise & fall
+        double hillClimb = Math.sin(x * 0.0022) * 68.0; // Steep technical slopes
+        double kicker = Math.cos(x * 0.0048) * 32.0;    // Launch kickers & whoops
+
+        return base + mountain + hillClimb + kicker;
+    }
+
     public double getHeightAt(double x) {
         for (Bridge b : bridges) {
             if (b.contains(x)) {
                 return b.getHeightAt(x);
             }
         }
-
-        double base = 480.0;
-
-        // Starting straightaway
-        if (x < 240) {
-            return base + Math.sin(x * 0.006) * 6.0;
-        }
-
-        // Varied rolling hill curves
-        double hill1 = Math.sin(x * 0.0018) * 58.0; // Main rolling crests
-        double hill2 = Math.cos(x * 0.0042) * 28.0; // Secondary slopes
-        double hill3 = Math.sin(x * 0.0008) * 35.0; // Long-range elevation rise & fall
-
-        return base + hill1 + hill2 + hill3;
+        return getBaseHeight(x);
     }
 
     public double getSlopeAt(double x) {

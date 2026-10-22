@@ -19,9 +19,9 @@ import java.util.List;
  */
 public class Vehicle {
     public enum VehicleType {
-        DIRT_BIKE("MOTOCROSS PRO BIKE", 15.5, 44.0, 5.6, 0.13, 0.17, 0.034),
-        JEEP_4X4("4x4 HILL CLIMBER JEEP", 17.0, 52.0, 5.3, 0.12, 0.19, 0.022),
-        MONSTER_TRUCK("MONSTER CRUSHER 4x4", 23.0, 56.0, 5.8, 0.14, 0.22, 0.020);
+        DIRT_BIKE("MOTOCROSS PRO BIKE", 15.5, 44.0, 5.6, 0.13, 0.17, 0.046),
+        JEEP_4X4("4x4 HILL CLIMBER JEEP", 17.0, 52.0, 5.3, 0.12, 0.19, 0.038),
+        MONSTER_TRUCK("MONSTER CRUSHER 4x4", 23.0, 56.0, 5.8, 0.14, 0.22, 0.032);
 
         public final String displayName;
         public final double wheelRadius;
@@ -331,17 +331,36 @@ public class Vehicle {
             particles.addCrashSparks(x, y + 2.0);
         }
 
-        // 3. TERRAIN ANGULAR ALIGNMENT & MOMENTUM
+        // 3. TERRAIN ANGULAR ALIGNMENT, BALANCE & ROLLOVER DYNAMICS
         if (onGround) {
             double targetSlope = terrain.getSlopeAt(x);
             double diff = targetSlope - angle;
             while (diff > Math.PI) diff -= Math.PI * 2;
             while (diff < -Math.PI) diff += Math.PI * 2;
 
-            // Torque reaction when both wheels or one wheel is grounded
-            double alignRate = (rearGrounded && frontGrounded) ? 0.16 : 0.08;
-            angle += diff * alignRate;
-            vAngle *= 0.70;
+            if (rearGrounded && frontGrounded) {
+                // Both wheels on ground: conform smoothly to terrain slope
+                angle += diff * 0.18;
+                vAngle *= 0.50;
+            } else if (rearGrounded && !frontGrounded) {
+                // Wheelie state: only rear wheel is on the ground
+                if (diff < -0.58) {
+                    // Tilted back past balance point: gravity rolls vehicle backward into a rollover!
+                    angle -= 0.038;
+                } else if (!gasInput) {
+                    // Gently return front wheel to earth if not giving gas
+                    angle += diff * 0.08;
+                }
+            } else if (frontGrounded && !rearGrounded) {
+                // Stoppie state: only front wheel is on the ground
+                if (diff > 0.52) {
+                    // Tilted forward past balance point: momentum rolls vehicle forward into a rollover!
+                    angle += 0.038;
+                } else if (!brakeInput) {
+                    // Gently return rear wheel to earth if not braking
+                    angle += diff * 0.08;
+                }
+            }
 
             if (wasAirborne && airTimeTimer > 0.8 && Math.abs(diff) < 0.35) {
                 stuntStack.push("PERFECT LANDING! +500");
@@ -350,7 +369,7 @@ public class Vehicle {
             wasAirborne = false;
 
             // Stunts: Wheelie & Stoppie
-            if (rearGrounded && !frontGrounded && vx > 2.0) {
+            if (rearGrounded && !frontGrounded && vx > 2.0 && diff > -0.55) {
                 wheelieTimer += 0.016;
                 if (wheelieTimer > 0.8) {
                     stuntStack.push("WHEELIE BONUS! +250");
@@ -359,7 +378,7 @@ public class Vehicle {
                 }
             } else wheelieTimer = 0;
 
-            if (frontGrounded && !rearGrounded && vx > 2.0) {
+            if (frontGrounded && !rearGrounded && vx > 2.0 && diff < 0.50) {
                 stoppieTimer += 0.016;
                 if (stoppieTimer > 0.7) {
                     stuntStack.push("STOPPIE BONUS! +300");
@@ -381,7 +400,7 @@ public class Vehicle {
 
             if (onGround) {
                 double slopeResistance = -Math.sin(currentSlope) * 0.18;
-                double effectiveForce = (isBoosting ? 0.30 : enginePower) + slopeResistance;
+                double effectiveForce = (isBoosting ? 0.32 : enginePower) + slopeResistance;
                 double currentMax = isBoosting ? maxSpeed * 1.35 : maxSpeed;
 
                 if (vx < currentMax) {
@@ -390,19 +409,21 @@ public class Vehicle {
                 }
 
                 // Dynamic Weight Transfer: Accelerating squats rear suspension and lifts front
-                rearSuspensionY = Math.min(targetRestY + 3.0, rearSuspensionY + 0.5);
-                frontSuspensionY = Math.max(targetRestY - 4.0, frontSuspensionY - 0.4);
+                rearSuspensionY = Math.min(targetRestY + 3.0, rearSuspensionY + 0.6);
+                frontSuspensionY = Math.max(targetRestY - 4.0, frontSuspensionY - 0.5);
 
                 // Rotational torque: Hard acceleration tips nose up
                 if (rearGrounded && !frontGrounded) {
-                    angle -= 0.014;
+                    angle -= 0.034; // Strong wheelie pitch-up!
+                } else if (rearGrounded && frontGrounded) {
+                    angle -= 0.012; // Natural acceleration squat
                 }
 
                 if (Math.abs(vx) > 1.0) {
                     particles.addDirtSpray(rearX, groundRearY, Math.abs(vx) * 0.25);
                 }
             } else {
-                angle -= airRotateTorque; // In-air backward pitch
+                angle -= airRotateTorque; // Responsive in-air backward pitch / backflip
             }
 
             particles.addExhaustSmoke(rearX - cosA * 12, y + sinA * 12);
@@ -422,26 +443,28 @@ public class Vehicle {
                 if (vx > 0.3) {
                     vx -= brakePower;
                     // Dynamic Weight Transfer: Braking compresses front suspension (nose dive)
-                    frontSuspensionY = Math.min(targetRestY + 3.0, frontSuspensionY + 0.6);
-                    rearSuspensionY = Math.max(targetRestY - 4.0, rearSuspensionY - 0.4);
+                    frontSuspensionY = Math.min(targetRestY + 3.0, frontSuspensionY + 0.7);
+                    rearSuspensionY = Math.max(targetRestY - 4.0, rearSuspensionY - 0.5);
 
                     // Rotational torque: Hard braking tips nose down
                     if (frontGrounded && !rearGrounded) {
-                        angle += 0.014;
+                        angle += 0.036; // Stoppie pitch-down!
+                    } else if (rearGrounded && frontGrounded && vx > 2.0) {
+                        angle += 0.012;
                     }
                 } else if (vx > maxReverseSpeed) {
                     vx -= 0.09;
                 }
             } else {
-                angle += airRotateTorque; // In-air forward pitch
+                angle += airRotateTorque; // Responsive in-air forward pitch / frontflip
             }
         }
 
         // 6. NITRO BOOST
         if (isBoosting && boostGauge > 0) {
             boostGauge = Math.max(0, boostGauge - 0.7);
-            vx += Math.cos(angle) * 0.24;
-            vy += Math.sin(angle) * 0.24;
+            vx += Math.cos(angle) * 0.26;
+            vy += Math.sin(angle) * 0.26;
             particles.addCoinSparkles(rearX - cosA * 18, y + 10);
         } else {
             isBoosting = false;
@@ -476,14 +499,21 @@ public class Vehicle {
         prevAngle = angle;
 
         // -------------------------------------------------------------
-        // ACCIDENT TRIGGER: HEAD GROUND IMPACT
+        // 8. ACCIDENT TRIGGER: DRIVER HEAD OR ROOF ROLLOVER GROUND IMPACT
         // -------------------------------------------------------------
-        double headX = x + sinA * 28.0;
-        double headY = y - cosA * 28.0;
+        double headX = x + sinA * 26.0;
+        double headY = y - cosA * 26.0;
         double groundAtHead = terrain.getHeightAt(headX);
 
-        if (headY >= groundAtHead && Math.abs(angle) > Math.PI * 0.50) {
+        // Check if driver head touched ground
+        if (headY >= groundAtHead - 3.0) {
             triggerAccident(terrain, particles);
+        } else {
+            // Check if vehicle rolled over upside down against the ground
+            double groundAtCenter = terrain.getHeightAt(x);
+            if (y >= groundAtCenter - 14.0 && cosA < -0.20) {
+                triggerAccident(terrain, particles);
+            }
         }
     }
 
