@@ -67,13 +67,13 @@ public class GamePanel extends JPanel {
         setPreferredSize(new Dimension(1024, 576));
         setFocusable(true);
 
-        // Initialize persistent scoreboard & load last pilot
+        // Initialize persistent scoreboard
         ScoreboardManager.init();
-        playerName = ScoreboardManager.getLastPlayerName();
-        playerBestScore = ScoreboardManager.getPlayerBestScore(playerName);
+        playerName = "Driver";
+        playerBestScore = 0;
 
-        // High-tech Driver Name Input Field on Login Card
-        nameField = new JTextField(playerName);
+        // Driver Name Input Field on Login Card - blank by default, no auto-recommended name
+        nameField = new JTextField("");
         nameField.setFont(new Font("Impact", Font.PLAIN, 22));
         nameField.setHorizontalAlignment(JTextField.CENTER);
         nameField.setBackground(new Color(15, 23, 42));
@@ -105,7 +105,7 @@ public class GamePanel extends JPanel {
 
     public void startRaceFromLogin() {
         String input = nameField.getText().trim();
-        if (input.isEmpty()) input = "Guest_Rider";
+        if (input.isEmpty()) input = "Driver";
         playerName = input;
         ScoreboardManager.saveLastPlayerName(playerName);
         playerBestScore = ScoreboardManager.getPlayerBestScore(playerName);
@@ -151,10 +151,9 @@ public class GamePanel extends JPanel {
         isPaused = false;
         gameOver = false;
         if (nameField != null) {
-            nameField.setText(playerName);
+            nameField.setText("");
             nameField.setVisible(true);
             nameField.setEnabled(true);
-            nameField.selectAll();
             nameField.requestFocusInWindow();
         }
         repaint();

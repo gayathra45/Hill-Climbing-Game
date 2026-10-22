@@ -1,4 +1,4 @@
-﻿# Hill Climb Racing - High Score Leaderboard
+# Hill Climb Racing - High Score Leaderboard
 # PlayerName:Score:DistanceMeters:TotalCoins
 Speed_Demon:58200:1250:4200
 KDU_Champion:42100:980:3100

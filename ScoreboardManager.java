@@ -98,7 +98,7 @@ public class ScoreboardManager {
     public static synchronized boolean recordScore(String playerName, int score, int distanceMeters, int coins) {
         init();
         if (playerName == null || playerName.trim().isEmpty()) {
-            playerName = "Guest_Rider";
+            playerName = "Driver";
         }
         playerName = playerName.trim();
         saveLastPlayerName(playerName);
@@ -189,7 +189,7 @@ public class ScoreboardManager {
                 }
             } catch (Exception ignored) {}
         }
-        return "Rider_Alex";
+        return "";
     }
 
     /**
