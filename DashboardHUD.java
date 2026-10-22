@@ -26,8 +26,8 @@ public class DashboardHUD {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-        // 1. TOP LEFT: SCORE, HOT MULTIPLIER, COINS
-        drawScorePanel(g2, score, coins);
+        // 1. TOP LEFT: SCORE, HOT MULTIPLIER, COINS, ACTIVE VEHICLE
+        drawScorePanel(g2, score, coins, vehicle);
 
         // 2. TOP CENTER: STAGE & BONUS
         drawStageBanner(g2, screenW, stage, vehicle.fuel);
@@ -50,7 +50,7 @@ public class DashboardHUD {
         drawControlsHint(g2, screenW, screenH);
     }
 
-    private static void drawScorePanel(Graphics2D g2, int score, int coins) {
+    private static void drawScorePanel(Graphics2D g2, int score, int coins, Vehicle vehicle) {
         int x = 20;
         int y = 20;
 
@@ -99,6 +99,21 @@ public class DashboardHUD {
         g2.setColor(Color.WHITE);
         g2.setFont(new Font("Impact", Font.BOLD, 19));
         g2.drawString(String.format("%,d", coins), x + 38, cy + 24);
+
+        // Active Vehicle Pill Badge
+        int vy = cy + 40;
+        g2.setColor(new Color(15, 23, 42, 210));
+        g2.fillRoundRect(x, vy, 190, 26, 13, 13);
+        g2.setColor(new Color(56, 189, 248, 140));
+        g2.setStroke(new BasicStroke(1.2f));
+        g2.drawRoundRect(x, vy, 190, 26, 13, 13);
+        g2.setStroke(new BasicStroke(1));
+
+        g2.setFont(new Font("Impact", Font.BOLD, 11));
+        g2.setColor(new Color(251, 191, 36));
+        g2.drawString("[V]", x + 10, vy + 18);
+        g2.setColor(new Color(241, 245, 249));
+        g2.drawString(vehicle.currentType.displayName, x + 30, vy + 18);
     }
 
     private static void drawStageBanner(Graphics2D g2, int screenW, int stage, double fuel) {
@@ -478,7 +493,7 @@ public class DashboardHUD {
 
     private static void drawControlsHint(Graphics2D g2, int screenW, int screenH) {
         g2.setFont(new Font("Impact", Font.PLAIN, 12));
-        g2.setColor(new Color(15, 23, 42, 170));
-        g2.drawString("CONTROLS: [RIGHT/D] GAS  |  [LEFT/A] BRAKE  |  [SPACE/UP] BOOST  |  [R] RESTART", 20, screenH - 12);
+        g2.setColor(new Color(15, 23, 42, 180));
+        g2.drawString("CONTROLS: [RIGHT/D] GAS  |  [LEFT/A] BRAKE  |  [SPACE/UP] BOOST  |  [V] SWITCH VEHICLE  |  [R] RESTART", 20, screenH - 12);
     }
 }

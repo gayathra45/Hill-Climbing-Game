@@ -58,16 +58,16 @@ public class GamePanel extends JPanel {
         // Start vehicle at beginning of road
         vehicle = new Vehicle(120, terrain.getHeightAt(120) - 25);
 
-        // Spawn arc coin clusters along hills and bridges (Just like in the photo!)
+        // Spawn arc coin clusters along hills and bridges
         spawnCoinArcs();
 
-        // Spawn fuel cans at regular intervals
-        for (double fx = 650; fx <= 12000; fx += 800) {
+        // Spawn fuel cans at regular intervals across extended map
+        for (double fx = 650; fx <= 50000; fx += 750) {
             collectibles.addLast(new Collectible(fx, terrain.getHeightAt(fx) - 30, Collectible.Type.FUEL));
         }
 
         // Spawn bonus stars
-        for (double sx = 950; sx <= 12000; sx += 1200) {
+        for (double sx = 950; sx <= 50000; sx += 1100) {
             collectibles.addLast(new Collectible(sx, terrain.getHeightAt(sx) - 75, Collectible.Type.BONUS_STAR));
         }
 
@@ -89,11 +89,11 @@ public class GamePanel extends JPanel {
             collectibles.addLast(new Collectible(cx, cy, t));
         }
 
-        // Additional repeating jump coin arcs over rolling hill crests
-        for (double base = 1200; base < 12000; base += 950) {
+        // Additional repeating jump coin arcs over rolling hill crests & jump ramps up to 50,000px
+        for (double base = 1200; base < 50000; base += 900) {
             for (int i = 0; i < 7; i++) {
                 double cx = base + i * 45;
-                double cy = terrain.getHeightAt(cx) - 50 - Math.sin((double) i / 6.0 * Math.PI) * 35;
+                double cy = terrain.getHeightAt(cx) - 50 - Math.sin((double) i / 6.0 * Math.PI) * 40;
                 Collectible.Type t = (i == 3) ? Collectible.Type.COIN_25 : Collectible.Type.COIN_5;
                 collectibles.addLast(new Collectible(cx, cy, t));
             }
@@ -113,6 +113,8 @@ public class GamePanel extends JPanel {
                     vehicle.brakeInput = true;
                 } else if (code == KeyEvent.VK_SPACE || code == KeyEvent.VK_UP || code == KeyEvent.VK_W) {
                     vehicle.isBoosting = true;
+                } else if (code == KeyEvent.VK_V) {
+                    vehicle.switchVehicle();
                 } else if (code == KeyEvent.VK_R) {
                     initGame();
                 }
