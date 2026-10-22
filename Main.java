@@ -97,6 +97,16 @@ public class Main {
             System.out.println("  Stunt Combo Chain " + depth + "x -> Points Bonus: " + bonus);
         }
 
+        // 7. PERSISTENT SCOREBOARD TEST
+        System.out.println("\n[7] PERSISTENT SCOREBOARD TEST (Leaderboard File I/O & Dynamic Updating):");
+        ScoreboardManager.init();
+        boolean newBest = ScoreboardManager.recordScore("KDU_Tester", 35000, 850, 2100);
+        int rank = ScoreboardManager.getPlayerRank("KDU_Tester");
+        int best = ScoreboardManager.getPlayerBestScore("KDU_Tester");
+        System.out.println("  Recorded 'KDU_Tester' Score: 35000 -> Is New Best? " + newBest);
+        System.out.println("  'KDU_Tester' Rank: #" + rank + " | Personal Best: " + best + " pts");
+        System.out.println("  Top Record #1: " + ScoreboardManager.getTopRecords(1).get(0).getPlayerName() + " (" + ScoreboardManager.getTopRecords(1).get(0).getScore() + " pts)");
+
         System.out.println("\n================================================================================");
         System.out.println(">>> ALL DATA STRUCTURES AND ALGORITHMS PASSED TEST SUITE SUCCESSFULLY! <<<");
         System.out.println("================================================================================");

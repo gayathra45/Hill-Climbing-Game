@@ -19,21 +19,169 @@ import java.awt.geom.*;
  */
 public class DashboardHUD {
 
+    public static final int PAUSE_BTN_W = 36;
+    public static final int PAUSE_BTN_H = 36;
+    public static final int PAUSE_BTN_Y = 92;
+
+    public static final int TROPHY_BTN_W = 36;
+    public static final int TROPHY_BTN_H = 36;
+
+    public static final int PEDAL_W = 78;
+    public static final int PEDAL_H = 112;
+    public static final int PEDAL_MARGIN_X = 35;
+    public static final int PEDAL_MARGIN_BOTTOM = 24;
+
+    public static boolean isPauseButtonClicked(int screenW, int mouseX, int mouseY) {
+        int px = screenW - 55;
+        int py = PAUSE_BTN_Y;
+        return mouseX >= px && mouseX <= px + PAUSE_BTN_W && mouseY >= py && mouseY <= py + PAUSE_BTN_H;
+    }
+
+    public static boolean isTrophyButtonClicked(int screenW, int mouseX, int mouseY) {
+        int tx = screenW - 98;
+        int ty = PAUSE_BTN_Y;
+        return mouseX >= tx && mouseX <= tx + TROPHY_BTN_W && mouseY >= ty && mouseY <= ty + TROPHY_BTN_H;
+    }
+
+    public static boolean isBrakePedalHovered(int screenH, int mouseX, int mouseY) {
+        int padY = screenH - PEDAL_H - PEDAL_MARGIN_BOTTOM;
+        return mouseX >= PEDAL_MARGIN_X && mouseX <= PEDAL_MARGIN_X + PEDAL_W &&
+               mouseY >= padY && mouseY <= padY + PEDAL_H;
+    }
+
+    public static boolean isGasPedalHovered(int screenW, int screenH, int mouseX, int mouseY) {
+        int padY = screenH - PEDAL_H - PEDAL_MARGIN_BOTTOM;
+        int gx = screenW - PEDAL_W - PEDAL_MARGIN_X;
+        return mouseX >= gx && mouseX <= gx + PEDAL_W &&
+               mouseY >= padY && mouseY <= padY + PEDAL_H;
+    }
+
+    public static boolean isResumeButtonClicked(int screenW, int screenH, int mouseX, int mouseY) {
+        int mw = 420;
+        int mh = 260;
+        int mx = (screenW - mw) / 2;
+        int my = (screenH - mh) / 2;
+        int rw = 220;
+        int rh = 44;
+        int rx = mx + (mw - rw) / 2;
+        int ry = my + 105;
+        return mouseX >= rx && mouseX <= rx + rw && mouseY >= ry && mouseY <= ry + rh;
+    }
+
+    public static boolean isPauseLeaderboardClicked(int screenW, int screenH, int mouseX, int mouseY) {
+        int mw = 420;
+        int mh = 260;
+        int mx = (screenW - mw) / 2;
+        int my = (screenH - mh) / 2;
+        int lw = 220;
+        int lh = 38;
+        int lx = mx + (mw - lw) / 2;
+        int ly = my + 158;
+        return mouseX >= lx && mouseX <= lx + lw && mouseY >= ly && mouseY <= ly + lh;
+    }
+
+    public static boolean isScoreboardCloseButtonClicked(int screenW, int screenH, int mouseX, int mouseY) {
+        int mw = 700;
+        int mh = 480;
+        int mx = (screenW - mw) / 2;
+        int my = (screenH - mh) / 2;
+        int bw = 240;
+        int bh = 42;
+        int bx = mx + (mw - bw) / 2;
+        int by = my + mh - 58;
+        return mouseX >= bx && mouseX <= bx + bw && mouseY >= by && mouseY <= by + bh;
+    }
+
+    public static boolean isStartRaceButtonClicked(int screenW, int screenH, int mouseX, int mouseY) {
+        int mw = 520;
+        int mh = 370;
+        int mx = (screenW - mw) / 2;
+        int my = (screenH - mh) / 2;
+        int bw = 260;
+        int bh = 46;
+        int bx = mx + (mw - bw) / 2;
+        int by = my + 215;
+        return mouseX >= bx && mouseX <= bx + bw && mouseY >= by && mouseY <= by + bh;
+    }
+
+    public static boolean isLoginLeaderboardButtonClicked(int screenW, int screenH, int mouseX, int mouseY) {
+        int mw = 520;
+        int mh = 370;
+        int mx = (screenW - mw) / 2;
+        int my = (screenH - mh) / 2;
+        int lw = 260;
+        int lh = 38;
+        int lx = mx + (mw - lw) / 2;
+        int ly = my + 272;
+        return mouseX >= lx && mouseX <= lx + lw && mouseY >= ly && mouseY <= ly + lh;
+    }
+
+    public static boolean isGameOverPlayAgainClicked(int screenW, int screenH, int mouseX, int mouseY) {
+        int mw = 560;
+        int mh = 380;
+        int mx = (screenW - mw) / 2;
+        int my = (screenH - mh) / 2;
+        int bw = 145;
+        int bh = 42;
+        int by = my + mh - 65;
+        int b1x = mx + 35;
+        return mouseX >= b1x && mouseX <= b1x + bw && mouseY >= by && mouseY <= by + bh;
+    }
+
+    public static boolean isGameOverLeaderboardClicked(int screenW, int screenH, int mouseX, int mouseY) {
+        int mw = 560;
+        int mh = 380;
+        int mx = (screenW - mw) / 2;
+        int my = (screenH - mh) / 2;
+        int bw = 145;
+        int bh = 42;
+        int by = my + mh - 65;
+        int b2x = mx + 35 + 165;
+        return mouseX >= b2x && mouseX <= b2x + bw && mouseY >= by && mouseY <= by + bh;
+    }
+
+    public static boolean isGameOverChangeDriverClicked(int screenW, int screenH, int mouseX, int mouseY) {
+        int mw = 560;
+        int mh = 380;
+        int mx = (screenW - mw) / 2;
+        int my = (screenH - mh) / 2;
+        int bw = 145;
+        int bh = 42;
+        int by = my + mh - 65;
+        int b3x = mx + 35 + 330;
+        return mouseX >= b3x && mouseX <= b3x + bw && mouseY >= by && mouseY <= by + bh;
+    }
+
     public static void render(Graphics2D g2, int screenW, int screenH, Vehicle vehicle, 
                               int score, int coins, int stage, int distanceMeters, 
                               String currentStunt, boolean gasPressed, boolean brakePressed) {
+        render(g2, screenW, screenH, vehicle, score, coins, stage, distanceMeters, 
+               currentStunt, gasPressed, brakePressed, false, "Rider", 0);
+    }
+
+    public static void render(Graphics2D g2, int screenW, int screenH, Vehicle vehicle, 
+                              int score, int coins, int stage, int distanceMeters, 
+                              String currentStunt, boolean gasPressed, boolean brakePressed, boolean isPaused) {
+        render(g2, screenW, screenH, vehicle, score, coins, stage, distanceMeters, 
+               currentStunt, gasPressed, brakePressed, isPaused, "Rider", 0);
+    }
+
+    public static void render(Graphics2D g2, int screenW, int screenH, Vehicle vehicle, 
+                              int score, int coins, int stage, int distanceMeters, 
+                              String currentStunt, boolean gasPressed, boolean brakePressed, 
+                              boolean isPaused, String playerName, int bestScore) {
 
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-        // 1. TOP LEFT: SCORE, HOT MULTIPLIER, COINS, ACTIVE VEHICLE
-        drawScorePanel(g2, score, coins, vehicle);
+        // 1. TOP LEFT: SCORE, HOT MULTIPLIER, COINS, ACTIVE VEHICLE, DRIVER & BEST SCORE
+        drawScorePanel(g2, score, coins, vehicle, playerName, bestScore);
 
         // 2. TOP CENTER: STAGE & BONUS
         drawStageBanner(g2, screenW, stage, vehicle.fuel);
 
-        // 3. TOP RIGHT: DISTANCE MILESTONES & PAUSE BUTTON
-        drawMilestones(g2, screenW, distanceMeters);
+        // 3. TOP RIGHT: DISTANCE MILESTONES, LEADERBOARD TROPHY & PAUSE BUTTON
+        drawMilestones(g2, screenW, distanceMeters, isPaused);
 
         // 4. BOTTOM CORNERS: REALISTIC METAL FOOT PEDALS
         drawPedals(g2, screenW, screenH, brakePressed, gasPressed);
@@ -46,11 +194,16 @@ public class DashboardHUD {
             drawStuntPopup(g2, screenW, currentStunt);
         }
 
-        // 7. KEYBOARD CONTROLS HELPER OVERLAY
+        // 7. KEYBOARD & MOUSE CONTROLS HELPER OVERLAY
         drawControlsHint(g2, screenW, screenH);
+
+        // 8. PAUSED MODAL OVERLAY
+        if (isPaused) {
+            drawPauseOverlay(g2, screenW, screenH);
+        }
     }
 
-    private static void drawScorePanel(Graphics2D g2, int score, int coins, Vehicle vehicle) {
+    private static void drawScorePanel(Graphics2D g2, int score, int coins, Vehicle vehicle, String playerName, int bestScore) {
         int x = 20;
         int y = 20;
 
@@ -114,6 +267,28 @@ public class DashboardHUD {
         g2.drawString("[V]", x + 10, vy + 18);
         g2.setColor(new Color(241, 245, 249));
         g2.drawString(vehicle.currentType.displayName, x + 30, vy + 18);
+
+        // Pilot Name & Personal Best Pill Badge
+        int dy = vy + 32;
+        g2.setColor(new Color(15, 23, 42, 215));
+        g2.fillRoundRect(x, dy, 205, 28, 14, 14);
+        g2.setColor(new Color(251, 191, 36, 150));
+        g2.setStroke(new BasicStroke(1.2f));
+        g2.drawRoundRect(x, dy, 205, 28, 14, 14);
+        g2.setStroke(new BasicStroke(1));
+
+        g2.setFont(new Font("Impact", Font.PLAIN, 12));
+        g2.setColor(new Color(253, 224, 71));
+        g2.drawString("PILOT:", x + 10, dy + 18);
+        g2.setColor(Color.WHITE);
+        String pName = (playerName != null && !playerName.isEmpty()) ? playerName : "Driver";
+        if (pName.length() > 10) pName = pName.substring(0, 9) + "..";
+        g2.drawString(pName, x + 46, dy + 18);
+
+        g2.setColor(new Color(74, 222, 128));
+        g2.drawString("BEST:", x + 114, dy + 18);
+        g2.setColor(Color.WHITE);
+        g2.drawString(String.format("%,d", bestScore), x + 146, dy + 18);
     }
 
     private static void drawStageBanner(Graphics2D g2, int screenW, int stage, double fuel) {
@@ -176,7 +351,7 @@ public class DashboardHUD {
         }
     }
 
-    private static void drawMilestones(Graphics2D g2, int screenW, int distanceMeters) {
+    private static void drawMilestones(Graphics2D g2, int screenW, int distanceMeters, boolean isPaused) {
         int x = screenW - 175;
         int y = 20;
 
@@ -220,14 +395,47 @@ public class DashboardHUD {
         g2.setColor(new Color(34, 197, 94));
         g2.fillPolygon(new int[]{x + 12, x + 20, x + 28}, new int[]{my + 26, my + 11, my + 26}, 3);
 
-        // Pause Button "||"
+        // Leaderboard Trophy Button "🏆"
+        int tx = screenW - 98;
+        int ty = PAUSE_BTN_Y;
+        g2.setColor(new Color(15, 23, 42, 215));
+        g2.fillRoundRect(tx, ty, TROPHY_BTN_W, TROPHY_BTN_H, 10, 10);
+        g2.setColor(new Color(251, 191, 36, 160));
+        g2.drawRoundRect(tx, ty, TROPHY_BTN_W, TROPHY_BTN_H, 10, 10);
+
+        // Gold Trophy Icon
+        g2.setColor(new Color(251, 191, 36));
+        g2.fillRoundRect(tx + 11, ty + 9, 14, 11, 4, 4);
+        g2.fillRect(tx + 16, ty + 20, 4, 5);
+        g2.fillRect(tx + 12, ty + 25, 12, 3);
+        g2.setStroke(new BasicStroke(1.8f));
+        g2.drawArc(tx + 7, ty + 10, 5, 7, 90, 180);
+        g2.drawArc(tx + 24, ty + 10, 5, 7, -90, 180);
+        g2.setStroke(new BasicStroke(1.0f));
+
+        // Pause / Play Button
         int px = screenW - 55;
-        int py = 92;
-        g2.setColor(new Color(15, 23, 42, 200));
-        g2.fillRoundRect(px, py, 36, 36, 10, 10);
-        g2.setColor(Color.WHITE);
-        g2.fillRect(px + 10, py + 9, 5, 18);
-        g2.fillRect(px + 21, py + 9, 5, 18);
+        int py = PAUSE_BTN_Y;
+        g2.setColor(new Color(15, 23, 42, 215));
+        g2.fillRoundRect(px, py, PAUSE_BTN_W, PAUSE_BTN_H, 10, 10);
+        g2.setColor(new Color(255, 255, 255, 45));
+        g2.drawRoundRect(px, py, PAUSE_BTN_W, PAUSE_BTN_H, 10, 10);
+
+        if (!isPaused) {
+            // "||" Pause Bars
+            g2.setColor(Color.WHITE);
+            g2.fillRect(px + 10, py + 9, 5, 18);
+            g2.fillRect(px + 21, py + 9, 5, 18);
+        } else {
+            // ">" Play Triangle (Green)
+            g2.setColor(new Color(74, 222, 128));
+            Polygon playTriangle = new Polygon(
+                new int[]{px + 12, px + 27, px + 12},
+                new int[]{py + 9, py + 18, py + 27},
+                3
+            );
+            g2.fillPolygon(playTriangle);
+        }
     }
 
     private static void drawPedals(Graphics2D g2, int screenW, int screenH, boolean brakePressed, boolean gasPressed) {
@@ -509,6 +717,457 @@ public class DashboardHUD {
     private static void drawControlsHint(Graphics2D g2, int screenW, int screenH) {
         g2.setFont(new Font("Impact", Font.PLAIN, 12));
         g2.setColor(new Color(15, 23, 42, 180));
-        g2.drawString("CONTROLS: [RIGHT/D] GAS  |  [LEFT/A] BRAKE  |  [SPACE/UP] BOOST  |  [V] SWITCH VEHICLE  |  [R] RESTART", 20, screenH - 12);
+        g2.drawString("CONTROLS: [RIGHT/D / MOUSE PEDAL] GAS  |  [LEFT/A / MOUSE PEDAL] BRAKE  |  [P / MOUSE] PAUSE  |  [SPACE] BOOST  |  [V] SWITCH  |  [R] RESTART", 20, screenH - 12);
+    }
+
+    public static void drawPauseOverlay(Graphics2D g2, int screenW, int screenH) {
+        // Semi-transparent dark blur backdrop
+        g2.setColor(new Color(15, 23, 42, 190));
+        g2.fillRect(0, 0, screenW, screenH);
+
+        // Center frosted glass card modal
+        int mw = 420;
+        int mh = 260;
+        int mx = (screenW - mw) / 2;
+        int my = (screenH - mh) / 2;
+
+        // Modal shadow
+        g2.setColor(new Color(0, 0, 0, 110));
+        g2.fillRoundRect(mx + 6, my + 8, mw, mh, 24, 24);
+
+        // Modal body gradient
+        GradientPaint modalGrad = new GradientPaint(
+            mx, my, new Color(30, 41, 59, 245),
+            mx, my + mh, new Color(15, 23, 42, 245)
+        );
+        g2.setPaint(modalGrad);
+        g2.fillRoundRect(mx, my, mw, mh, 24, 24);
+
+        // Border glow
+        g2.setColor(new Color(56, 189, 248, 140));
+        g2.setStroke(new BasicStroke(2.0f));
+        g2.drawRoundRect(mx, my, mw, mh, 24, 24);
+        g2.setStroke(new BasicStroke(1.0f));
+
+        // Title: GAME PAUSED
+        g2.setFont(new Font("Impact", Font.BOLD, 36));
+        g2.setColor(new Color(253, 224, 71));
+        FontMetrics fm = g2.getFontMetrics();
+        String title = "GAME PAUSED";
+        g2.drawString(title, mx + (mw - fm.stringWidth(title)) / 2, my + 50);
+
+        // Subtitle
+        g2.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        g2.setColor(new Color(203, 213, 225));
+        fm = g2.getFontMetrics();
+        String sub = "Game is currently suspended";
+        g2.drawString(sub, mx + (mw - fm.stringWidth(sub)) / 2, my + 76);
+
+        // Button 1: Resume Button inside modal
+        int rw = 220;
+        int rh = 44;
+        int rx = mx + (mw - rw) / 2;
+        int ry = my + 105;
+
+        // Resume button gradient (Vibrant Emerald)
+        GradientPaint btnGrad = new GradientPaint(
+            rx, ry, new Color(34, 197, 94),
+            rx, ry + rh, new Color(22, 163, 74)
+        );
+        g2.setPaint(btnGrad);
+        g2.fillRoundRect(rx, ry, rw, rh, 16, 16);
+        g2.setColor(new Color(255, 255, 255, 90));
+        g2.fillRoundRect(rx + 2, ry + 2, rw - 4, rh / 2 - 2, 14, 14);
+
+        g2.setFont(new Font("Impact", Font.BOLD, 20));
+        g2.setColor(Color.WHITE);
+        fm = g2.getFontMetrics();
+        String resumeTxt = "RESUME GAME  \u25B6";
+        g2.drawString(resumeTxt, rx + (rw - fm.stringWidth(resumeTxt)) / 2, ry + 29);
+
+        // Button 2: Leaderboard Button inside pause modal
+        int lw = 220;
+        int lh = 38;
+        int lx = mx + (mw - lw) / 2;
+        int ly = my + 158;
+
+        GradientPaint lGrad = new GradientPaint(
+            lx, ly, new Color(217, 119, 6),
+            lx, ly + lh, new Color(180, 83, 9)
+        );
+        g2.setPaint(lGrad);
+        g2.fillRoundRect(lx, ly, lw, lh, 14, 14);
+        g2.setColor(new Color(255, 255, 255, 60));
+        g2.fillRoundRect(lx + 2, ly + 2, lw - 4, lh / 2 - 2, 12, 12);
+
+        g2.setFont(new Font("Impact", Font.BOLD, 17));
+        g2.setColor(Color.WHITE);
+        fm = g2.getFontMetrics();
+        String lTxt = "VIEW LEADERBOARD  \uD83C\uDFC6";
+        g2.drawString(lTxt, lx + (lw - fm.stringWidth(lTxt)) / 2, ly + 25);
+
+        // Keyboard & Mouse hint
+        g2.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        g2.setColor(new Color(148, 163, 184));
+        fm = g2.getFontMetrics();
+        String hint = "Click Resume button, Pause button, or Press [P] / [ESC]";
+        g2.drawString(hint, mx + (mw - fm.stringWidth(hint)) / 2, my + 235);
+    }
+
+    public static void drawLoginScreen(Graphics2D g2, int screenW, int screenH) {
+        // Subtle darkened tint over idling background scene
+        g2.setColor(new Color(15, 23, 42, 170));
+        g2.fillRect(0, 0, screenW, screenH);
+
+        int mw = 520;
+        int mh = 370;
+        int mx = (screenW - mw) / 2;
+        int my = (screenH - mh) / 2;
+
+        // Shadow
+        g2.setColor(new Color(0, 0, 0, 130));
+        g2.fillRoundRect(mx + 8, my + 10, mw, mh, 28, 28);
+
+        // Body
+        GradientPaint modalGrad = new GradientPaint(
+            mx, my, new Color(30, 41, 59, 250),
+            mx, my + mh, new Color(15, 23, 42, 250)
+        );
+        g2.setPaint(modalGrad);
+        g2.fillRoundRect(mx, my, mw, mh, 28, 28);
+
+        // Border glow
+        g2.setColor(new Color(56, 189, 248, 160));
+        g2.setStroke(new BasicStroke(2.2f));
+        g2.drawRoundRect(mx, my, mw, mh, 28, 28);
+        g2.setStroke(new BasicStroke(1.0f));
+
+        // Game Logo / Title
+        g2.setFont(new Font("Impact", Font.BOLD, 36));
+        g2.setColor(new Color(253, 224, 71));
+        FontMetrics fm = g2.getFontMetrics();
+        String title = "HILL CLIMB RACING 2";
+        g2.drawString(title, mx + (mw - fm.stringWidth(title)) / 2, my + 52);
+
+        // Subtitle badge
+        g2.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        g2.setColor(new Color(56, 189, 248));
+        fm = g2.getFontMetrics();
+        String sub = "COUNTRYSIDE STAGE 4 \u2022 KDU IT22013 DSA";
+        g2.drawString(sub, mx + (mw - fm.stringWidth(sub)) / 2, my + 78);
+
+        // Prompt
+        g2.setFont(new Font("Impact", Font.PLAIN, 18));
+        g2.setColor(Color.WHITE);
+        fm = g2.getFontMetrics();
+        String prompt = "ENTER DRIVER NAME TO BEGIN:";
+        g2.drawString(prompt, mx + (mw - fm.stringWidth(prompt)) / 2, my + 128);
+
+        // Button 1: START RACE ▶
+        int bw = 260;
+        int bh = 46;
+        int bx = mx + (mw - bw) / 2;
+        int by = my + 215;
+
+        GradientPaint startGrad = new GradientPaint(
+            bx, by, new Color(34, 197, 94),
+            bx, by + bh, new Color(22, 163, 74)
+        );
+        g2.setPaint(startGrad);
+        g2.fillRoundRect(bx, by, bw, bh, 16, 16);
+        g2.setColor(new Color(255, 255, 255, 90));
+        g2.fillRoundRect(bx + 2, by + 2, bw - 4, bh / 2 - 2, 14, 14);
+
+        g2.setFont(new Font("Impact", Font.BOLD, 22));
+        g2.setColor(Color.WHITE);
+        fm = g2.getFontMetrics();
+        String startTxt = "START RACE  \u25B6";
+        g2.drawString(startTxt, bx + (bw - fm.stringWidth(startTxt)) / 2, by + 31);
+
+        // Button 2: LEADERBOARD 🏆
+        int lw = 260;
+        int lh = 38;
+        int lx = mx + (mw - lw) / 2;
+        int ly = my + 272;
+
+        GradientPaint lGrad = new GradientPaint(
+            lx, ly, new Color(217, 119, 6),
+            lx, ly + lh, new Color(180, 83, 9)
+        );
+        g2.setPaint(lGrad);
+        g2.fillRoundRect(lx, ly, lw, lh, 14, 14);
+        g2.setColor(new Color(255, 255, 255, 60));
+        g2.fillRoundRect(lx + 2, ly + 2, lw - 4, lh / 2 - 2, 12, 12);
+
+        g2.setFont(new Font("Impact", Font.BOLD, 17));
+        g2.setColor(Color.WHITE);
+        fm = g2.getFontMetrics();
+        String lTxt = "VIEW LEADERBOARD  \uD83C\uDFC6";
+        g2.drawString(lTxt, lx + (lw - fm.stringWidth(lTxt)) / 2, ly + 25);
+
+        // Footer Hint
+        g2.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        g2.setColor(new Color(148, 163, 184));
+        fm = g2.getFontMetrics();
+        String hint = "Type name & Press ENTER or click START RACE";
+        g2.drawString(hint, mx + (mw - fm.stringWidth(hint)) / 2, my + 342);
+    }
+
+    public static void drawScoreboardOverlay(Graphics2D g2, int screenW, int screenH, String currentPlayerName) {
+        // Darkened glassmorphic backdrop
+        g2.setColor(new Color(15, 23, 42, 230));
+        g2.fillRect(0, 0, screenW, screenH);
+
+        int mw = 700;
+        int mh = 480;
+        int mx = (screenW - mw) / 2;
+        int my = (screenH - mh) / 2;
+
+        // Outer Shadow
+        g2.setColor(new Color(0, 0, 0, 140));
+        g2.fillRoundRect(mx + 8, my + 10, mw, mh, 28, 28);
+
+        // Modal Body
+        GradientPaint modalGrad = new GradientPaint(
+            mx, my, new Color(30, 41, 59, 250),
+            mx, my + mh, new Color(15, 23, 42, 250)
+        );
+        g2.setPaint(modalGrad);
+        g2.fillRoundRect(mx, my, mw, mh, 28, 28);
+
+        // Luminous Amber/Gold Border
+        g2.setColor(new Color(251, 191, 36, 180));
+        g2.setStroke(new BasicStroke(2.2f));
+        g2.drawRoundRect(mx, my, mw, mh, 28, 28);
+        g2.setStroke(new BasicStroke(1.0f));
+
+        // Header Title
+        g2.setFont(new Font("Impact", Font.BOLD, 32));
+        g2.setColor(new Color(253, 224, 71));
+        FontMetrics fm = g2.getFontMetrics();
+        String title = "\u2605 ALL-TIME HIGH SCORE LEADERBOARD \u2605";
+        g2.drawString(title, mx + (mw - fm.stringWidth(title)) / 2, my + 44);
+
+        // Subtitle: Algorithm mention for KDU DSA viva
+        g2.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        g2.setColor(new Color(148, 163, 184));
+        fm = g2.getFontMetrics();
+        String sub = "Rankings sorted in real-time using Selection Sort O(n\u00B2) - KDU IT22013 DSA";
+        g2.drawString(sub, mx + (mw - fm.stringWidth(sub)) / 2, my + 68);
+
+        // Table Header Bar
+        int hy = my + 84;
+        g2.setColor(new Color(51, 65, 85, 210));
+        g2.fillRoundRect(mx + 25, hy, mw - 50, 32, 10, 10);
+        g2.setColor(new Color(255, 255, 255, 30));
+        g2.drawRoundRect(mx + 25, hy, mw - 50, 32, 10, 10);
+
+        g2.setFont(new Font("Impact", Font.PLAIN, 14));
+        g2.setColor(new Color(203, 213, 225));
+        g2.drawString("RANK", mx + 45, hy + 21);
+        g2.drawString("DRIVER", mx + 130, hy + 21);
+        g2.drawString("BEST SCORE", mx + 310, hy + 21);
+        g2.drawString("DISTANCE", mx + 440, hy + 21);
+        g2.drawString("COINS", mx + 555, hy + 21);
+
+        // List top records
+        java.util.List<HillClimbAlgorithms.HighScoreRecord> top = ScoreboardManager.getTopRecords(7);
+        int rowY = hy + 40;
+
+        for (int i = 0; i < top.size(); i++) {
+            HillClimbAlgorithms.HighScoreRecord rec = top.get(i);
+            boolean isSelf = (currentPlayerName != null && rec.getPlayerName().equalsIgnoreCase(currentPlayerName.trim()));
+
+            // Row background
+            if (isSelf) {
+                g2.setColor(new Color(56, 189, 248, 60));
+                g2.fillRoundRect(mx + 25, rowY, mw - 50, 34, 8, 8);
+                g2.setColor(new Color(56, 189, 248, 180));
+                g2.setStroke(new BasicStroke(1.5f));
+                g2.drawRoundRect(mx + 25, rowY, mw - 50, 34, 8, 8);
+                g2.setStroke(new BasicStroke(1.0f));
+            } else if (i % 2 == 0) {
+                g2.setColor(new Color(30, 41, 59, 120));
+                g2.fillRoundRect(mx + 25, rowY, mw - 50, 34, 8, 8);
+            }
+
+            // Rank Badge
+            if (i == 0) {
+                g2.setColor(new Color(251, 191, 36)); // Gold
+                g2.fillRoundRect(mx + 38, rowY + 6, 52, 22, 6, 6);
+                g2.setColor(new Color(15, 23, 42));
+                g2.setFont(new Font("Impact", Font.BOLD, 13));
+                g2.drawString("#1 GOLD", mx + 43, rowY + 22);
+            } else if (i == 1) {
+                g2.setColor(new Color(226, 232, 240)); // Silver
+                g2.fillRoundRect(mx + 38, rowY + 6, 56, 22, 6, 6);
+                g2.setColor(new Color(15, 23, 42));
+                g2.setFont(new Font("Impact", Font.BOLD, 13));
+                g2.drawString("#2 SLVR", mx + 43, rowY + 22);
+            } else if (i == 2) {
+                g2.setColor(new Color(217, 119, 6)); // Bronze
+                g2.fillRoundRect(mx + 38, rowY + 6, 56, 22, 6, 6);
+                g2.setColor(Color.WHITE);
+                g2.setFont(new Font("Impact", Font.BOLD, 13));
+                g2.drawString("#3 BRNZ", mx + 43, rowY + 22);
+            } else {
+                g2.setColor(new Color(148, 163, 184));
+                g2.setFont(new Font("Impact", Font.BOLD, 15));
+                g2.drawString("#" + (i + 1), mx + 54, rowY + 23);
+            }
+
+            // Driver Name
+            g2.setFont(new Font("Segoe UI", isSelf ? Font.BOLD : Font.PLAIN, 15));
+            g2.setColor(isSelf ? new Color(56, 189, 248) : Color.WHITE);
+            String dName = rec.getPlayerName();
+            if (isSelf) dName += " (YOU)";
+            g2.drawString(dName, mx + 130, rowY + 23);
+
+            // Score
+            g2.setFont(new Font("Impact", Font.BOLD, 16));
+            g2.setColor(new Color(253, 224, 71));
+            g2.drawString(String.format("%,d", rec.getScore()), mx + 310, rowY + 23);
+
+            // Distance
+            g2.setFont(new Font("Impact", Font.PLAIN, 15));
+            g2.setColor(new Color(74, 222, 128));
+            g2.drawString(rec.getDistanceMeters() + "m", mx + 440, rowY + 23);
+
+            // Coins
+            g2.setColor(new Color(251, 146, 60));
+            g2.drawString(String.format("%,d", rec.getTotalCoins()), mx + 555, rowY + 23);
+
+            rowY += 38;
+        }
+
+        // Close / Back Button
+        int bw = 240;
+        int bh = 42;
+        int bx = mx + (mw - bw) / 2;
+        int by = my + mh - 58;
+
+        GradientPaint closeGrad = new GradientPaint(
+            bx, by, new Color(59, 130, 246),
+            bx, by + bh, new Color(29, 78, 216)
+        );
+        g2.setPaint(closeGrad);
+        g2.fillRoundRect(bx, by, bw, bh, 14, 14);
+        g2.setColor(new Color(255, 255, 255, 80));
+        g2.fillRoundRect(bx + 2, by + 2, bw - 4, bh / 2 - 2, 12, 12);
+
+        g2.setFont(new Font("Impact", Font.BOLD, 18));
+        g2.setColor(Color.WHITE);
+        fm = g2.getFontMetrics();
+        String closeTxt = "CLOSE LEADERBOARD [ESC]";
+        g2.drawString(closeTxt, bx + (bw - fm.stringWidth(closeTxt)) / 2, by + 27);
+    }
+
+    public static void drawGameOverScreen(Graphics2D g2, int screenW, int screenH, String reason, 
+                                          int score, int distanceMeters, int coins, 
+                                          String playerName, int bestScore, boolean isNewBest) {
+        // Darkened backdrop
+        g2.setColor(new Color(15, 23, 42, 230));
+        g2.fillRect(0, 0, screenW, screenH);
+
+        int mw = 580;
+        int mh = 390;
+        int mx = (screenW - mw) / 2;
+        int my = (screenH - mh) / 2;
+
+        // Shadow & Body
+        g2.setColor(new Color(0, 0, 0, 140));
+        g2.fillRoundRect(mx + 8, my + 10, mw, mh, 28, 28);
+
+        GradientPaint cardGrad = new GradientPaint(
+            mx, my, new Color(30, 41, 59, 250),
+            mx, my + mh, new Color(15, 23, 42, 250)
+        );
+        g2.setPaint(cardGrad);
+        g2.fillRoundRect(mx, my, mw, mh, 28, 28);
+
+        g2.setColor(new Color(239, 68, 68, 180));
+        g2.setStroke(new BasicStroke(2.2f));
+        g2.drawRoundRect(mx, my, mw, mh, 28, 28);
+        g2.setStroke(new BasicStroke(1.0f));
+
+        // Crash Reason Title
+        g2.setFont(new Font("Impact", Font.BOLD, 36));
+        g2.setColor(new Color(239, 68, 68));
+        FontMetrics fm = g2.getFontMetrics();
+        g2.drawString(reason, mx + (mw - fm.stringWidth(reason)) / 2, my + 50);
+
+        // New Best Record Banner!
+        int curY = my + 68;
+        if (isNewBest) {
+            g2.setColor(new Color(251, 191, 36));
+            g2.fillRoundRect(mx + 60, curY, mw - 120, 32, 16, 16);
+            g2.setFont(new Font("Impact", Font.BOLD, 17));
+            g2.setColor(new Color(15, 23, 42));
+            String nbStr = "\u2605 NEW PERSONAL BEST SCORE RECORD! \u2605";
+            fm = g2.getFontMetrics();
+            g2.drawString(nbStr, mx + (mw - fm.stringWidth(nbStr)) / 2, curY + 22);
+            curY += 44;
+        } else {
+            curY += 15;
+        }
+
+        // Stats Grid Box
+        int gw = mw - 80;
+        int gh = 96;
+        int gx = mx + 40;
+        int gy = curY;
+        g2.setColor(new Color(15, 23, 42, 220));
+        g2.fillRoundRect(gx, gy, gw, gh, 14, 14);
+        g2.setColor(new Color(255, 255, 255, 30));
+        g2.drawRoundRect(gx, gy, gw, gh, 14, 14);
+
+        // Driver & Stats Left
+        g2.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        g2.setColor(new Color(148, 163, 184));
+        g2.drawString("DRIVER: " + playerName, gx + 20, gy + 28);
+        int rank = ScoreboardManager.getPlayerRank(playerName);
+        String rankStr = (rank > 0) ? "#" + rank + " Overall" : "-";
+        g2.drawString("RANK: " + rankStr, gx + 20, gy + 54);
+        g2.drawString("COINS: " + String.format("%,d", coins), gx + 20, gy + 80);
+
+        // Stats Right
+        g2.setFont(new Font("Impact", Font.PLAIN, 16));
+        g2.setColor(new Color(74, 222, 128));
+        g2.drawString("DISTANCE: " + distanceMeters + "m", gx + 240, gy + 28);
+        g2.setColor(Color.WHITE);
+        g2.drawString("RUN SCORE: " + String.format("%,d", score), gx + 240, gy + 54);
+        g2.setColor(new Color(253, 224, 71));
+        g2.drawString("ALL-TIME BEST: " + String.format("%,d", bestScore), gx + 240, gy + 80);
+
+        // 3 Action Buttons:
+        int bw = 155;
+        int bh = 42;
+        int by = my + mh - 65;
+        int b1x = mx + 30;
+
+        // [R] PLAY AGAIN
+        GradientPaint pGrad = new GradientPaint(b1x, by, new Color(34, 197, 94), b1x, by + bh, new Color(22, 163, 74));
+        g2.setPaint(pGrad);
+        g2.fillRoundRect(b1x, by, bw, bh, 14, 14);
+        g2.setColor(Color.WHITE);
+        g2.setFont(new Font("Impact", Font.BOLD, 16));
+        fm = g2.getFontMetrics();
+        g2.drawString("[R] PLAY AGAIN", b1x + (bw - fm.stringWidth("[R] PLAY AGAIN")) / 2, by + 27);
+
+        // [L] LEADERBOARD
+        int b2x = b1x + 175;
+        GradientPaint lGrad = new GradientPaint(b2x, by, new Color(217, 119, 6), b2x, by + bh, new Color(180, 83, 9));
+        g2.setPaint(lGrad);
+        g2.fillRoundRect(b2x, by, bw, bh, 14, 14);
+        g2.setColor(Color.WHITE);
+        g2.drawString("[L] SCORES \uD83C\uDFC6", b2x + (bw - fm.stringWidth("[L] SCORES \uD83C\uDFC6")) / 2, by + 27);
+
+        // [C] CHANGE DRIVER
+        int b3x = b2x + 175;
+        GradientPaint cGrad = new GradientPaint(b3x, by, new Color(59, 130, 246), b3x, by + bh, new Color(29, 78, 216));
+        g2.setPaint(cGrad);
+        g2.fillRoundRect(b3x, by, bw, bh, 14, 14);
+        g2.setColor(Color.WHITE);
+        g2.drawString("[C] CHANGE \uD83D\uDC64", b3x + (bw - fm.stringWidth("[C] CHANGE \uD83D\uDC64")) / 2, by + 27);
     }
 }

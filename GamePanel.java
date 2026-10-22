@@ -24,6 +24,21 @@ public class GamePanel extends JPanel {
     private double camX = 0;
     private double camY = 0;
 
+    // Game States
+    public enum GameState {
+        LOGIN,
+        PLAYING,
+        SCOREBOARD
+    }
+
+    private GameState gameState = GameState.LOGIN;
+    private GameState previousState = GameState.LOGIN;
+    private String playerName = "Rider_Alex";
+    private int playerBestScore = 0;
+    private boolean isNewBestRecord = false;
+    private boolean scoreRecorded = false;
+    private JTextField nameField;
+
     // Game Stats
     private int score = 340;
     private int coins = 24280;
@@ -32,23 +47,117 @@ public class GamePanel extends JPanel {
     private String currentStunt = null;
     private int stuntDisplayTimer = 0;
 
-    // Controls
+    // Controls State (combining keyboard and mouse pedals)
+    private boolean keyGasPressed = false;
+    private boolean keyBrakePressed = false;
+    private boolean mouseGasPressed = false;
+    private boolean mouseBrakePressed = false;
     private boolean gasPressed = false;
     private boolean brakePressed = false;
 
     // Game state
+    private boolean isPaused = false;
     private boolean gameOver = false;
     private String gameOverReason = "";
     private int crashAnimationTimer = 85;
 
     public GamePanel() {
+        setLayout(null);
         setBackground(new Color(125, 211, 252));
         setPreferredSize(new Dimension(1024, 576));
         setFocusable(true);
 
+        // Initialize persistent scoreboard & load last pilot
+        ScoreboardManager.init();
+        playerName = ScoreboardManager.getLastPlayerName();
+        playerBestScore = ScoreboardManager.getPlayerBestScore(playerName);
+
+        // High-tech Driver Name Input Field on Login Card
+        nameField = new JTextField(playerName);
+        nameField.setFont(new Font("Impact", Font.PLAIN, 22));
+        nameField.setHorizontalAlignment(JTextField.CENTER);
+        nameField.setBackground(new Color(15, 23, 42));
+        nameField.setForeground(new Color(253, 224, 71));
+        nameField.setCaretColor(Color.WHITE);
+        nameField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(56, 189, 248), 2, true),
+            BorderFactory.createEmptyBorder(6, 14, 6, 14)
+        ));
+        nameField.addActionListener(e -> startRaceFromLogin());
+        add(nameField);
+
         initGame();
         setupInput();
         startGameLoop();
+    }
+
+    @Override
+    public void doLayout() {
+        super.doLayout();
+        if (nameField != null) {
+            int mw = 520;
+            int mh = 370;
+            int mx = (getWidth() - mw) / 2;
+            int my = (getHeight() - mh) / 2;
+            nameField.setBounds(mx + (mw - 320) / 2, my + 148, 320, 44);
+        }
+    }
+
+    public void startRaceFromLogin() {
+        String input = nameField.getText().trim();
+        if (input.isEmpty()) input = "Guest_Rider";
+        playerName = input;
+        ScoreboardManager.saveLastPlayerName(playerName);
+        playerBestScore = ScoreboardManager.getPlayerBestScore(playerName);
+
+        nameField.setVisible(false);
+        nameField.setEnabled(false);
+        gameState = GameState.PLAYING;
+        initGame();
+        requestFocusInWindow();
+        repaint();
+    }
+
+    public void openLeaderboard() {
+        if (gameState != GameState.SCOREBOARD) {
+            previousState = gameState;
+            gameState = GameState.SCOREBOARD;
+            if (nameField != null) {
+                nameField.setVisible(false);
+                nameField.setEnabled(false);
+            }
+            repaint();
+        }
+    }
+
+    public void closeLeaderboard() {
+        if (gameState == GameState.SCOREBOARD) {
+            gameState = previousState;
+            if (gameState == GameState.LOGIN) {
+                if (nameField != null) {
+                    nameField.setVisible(true);
+                    nameField.setEnabled(true);
+                    nameField.requestFocusInWindow();
+                }
+            } else {
+                requestFocusInWindow();
+            }
+            repaint();
+        }
+    }
+
+    public void changeDriver() {
+        gameState = GameState.LOGIN;
+        isPaused = false;
+        gameOver = false;
+        if (nameField != null) {
+            nameField.setText(playerName);
+            nameField.setVisible(true);
+            nameField.setEnabled(true);
+            nameField.selectAll();
+            nameField.requestFocusInWindow();
+        }
+        repaint();
     }
 
     private void initGame() {
@@ -79,6 +188,15 @@ public class GamePanel extends JPanel {
         gameOver = false;
         gameOverReason = "";
         crashAnimationTimer = 85;
+        isPaused = false;
+        scoreRecorded = false;
+        isNewBestRecord = false;
+        keyGasPressed = false;
+        keyBrakePressed = false;
+        mouseGasPressed = false;
+        mouseBrakePressed = false;
+        gasPressed = false;
+        brakePressed = false;
     }
 
     private void spawnCoinArcs() {
@@ -122,22 +240,84 @@ public class GamePanel extends JPanel {
         }
     }
 
+    private void togglePause() {
+        if (gameOver) return;
+        isPaused = !isPaused;
+        if (isPaused) {
+            keyGasPressed = false;
+            keyBrakePressed = false;
+            mouseGasPressed = false;
+            mouseBrakePressed = false;
+            vehicle.isBoosting = false;
+            syncInputs();
+        }
+    }
+
+    private void syncInputs() {
+        gasPressed = keyGasPressed || mouseGasPressed;
+        brakePressed = keyBrakePressed || mouseBrakePressed;
+        vehicle.gasInput = gasPressed;
+        vehicle.brakeInput = brakePressed;
+    }
+
     private void setupInput() {
         KeyAdapter ka = new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 int code = e.getKeyCode();
-                if (code == KeyEvent.VK_RIGHT || code == KeyEvent.VK_D) {
-                    gasPressed = true;
-                    vehicle.gasInput = true;
-                } else if (code == KeyEvent.VK_LEFT || code == KeyEvent.VK_A) {
-                    brakePressed = true;
-                    vehicle.brakeInput = true;
-                } else if (code == KeyEvent.VK_SPACE || code == KeyEvent.VK_UP || code == KeyEvent.VK_W) {
-                    vehicle.isBoosting = true;
-                } else if (code == KeyEvent.VK_V) {
-                    vehicle.switchVehicle();
-                } else if (code == KeyEvent.VK_R) {
+
+                // 1. If currently on Leaderboard Scoreboard screen
+                if (gameState == GameState.SCOREBOARD) {
+                    if (code == KeyEvent.VK_ESCAPE || code == KeyEvent.VK_L || code == KeyEvent.VK_ENTER) {
+                        closeLeaderboard();
+                    }
+                    return;
+                }
+
+                // 2. If currently on Driver Name Login screen
+                if (gameState == GameState.LOGIN) {
+                    if (code == KeyEvent.VK_ENTER) {
+                        startRaceFromLogin();
+                    } else if (code == KeyEvent.VK_L) {
+                        openLeaderboard();
+                    }
+                    return;
+                }
+
+                // 3. If Game Over screen
+                if (gameOver) {
+                    if (code == KeyEvent.VK_R) {
+                        initGame();
+                    } else if (code == KeyEvent.VK_L) {
+                        openLeaderboard();
+                    } else if (code == KeyEvent.VK_C) {
+                        changeDriver();
+                    }
+                    return;
+                }
+
+                // 4. In-Game Controls
+                if (code == KeyEvent.VK_P || code == KeyEvent.VK_ESCAPE) {
+                    togglePause();
+                    repaint();
+                } else if (code == KeyEvent.VK_L) {
+                    openLeaderboard();
+                } else if (code == KeyEvent.VK_C) {
+                    changeDriver();
+                } else if (!isPaused) {
+                    if (code == KeyEvent.VK_RIGHT || code == KeyEvent.VK_D) {
+                        keyGasPressed = true;
+                        syncInputs();
+                    } else if (code == KeyEvent.VK_LEFT || code == KeyEvent.VK_A) {
+                        keyBrakePressed = true;
+                        syncInputs();
+                    } else if (code == KeyEvent.VK_SPACE || code == KeyEvent.VK_UP || code == KeyEvent.VK_W) {
+                        vehicle.isBoosting = true;
+                    } else if (code == KeyEvent.VK_V) {
+                        vehicle.switchVehicle();
+                    }
+                }
+                if (code == KeyEvent.VK_R) {
                     initGame();
                 }
             }
@@ -146,11 +326,11 @@ public class GamePanel extends JPanel {
             public void keyReleased(KeyEvent e) {
                 int code = e.getKeyCode();
                 if (code == KeyEvent.VK_RIGHT || code == KeyEvent.VK_D) {
-                    gasPressed = false;
-                    vehicle.gasInput = false;
+                    keyGasPressed = false;
+                    syncInputs();
                 } else if (code == KeyEvent.VK_LEFT || code == KeyEvent.VK_A) {
-                    brakePressed = false;
-                    vehicle.brakeInput = false;
+                    keyBrakePressed = false;
+                    syncInputs();
                 } else if (code == KeyEvent.VK_SPACE || code == KeyEvent.VK_UP || code == KeyEvent.VK_W) {
                     vehicle.isBoosting = false;
                 }
@@ -158,12 +338,153 @@ public class GamePanel extends JPanel {
         };
 
         addKeyListener(ka);
-        addMouseListener(new MouseAdapter() {
+
+        MouseAdapter ma = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 requestFocusInWindow();
+                int mx = e.getX();
+                int my = e.getY();
+                int w = getWidth();
+                int h = getHeight();
+
+                // 1. Leaderboard Scoreboard State
+                if (gameState == GameState.SCOREBOARD) {
+                    if (DashboardHUD.isScoreboardCloseButtonClicked(w, h, mx, my) || 
+                        mx < (w - 700) / 2 || mx > (w + 700) / 2 || my < (h - 480) / 2 || my > (h + 480) / 2) {
+                        closeLeaderboard();
+                    }
+                    return;
+                }
+
+                // 2. Login Screen State
+                if (gameState == GameState.LOGIN) {
+                    if (DashboardHUD.isStartRaceButtonClicked(w, h, mx, my)) {
+                        startRaceFromLogin();
+                    } else if (DashboardHUD.isLoginLeaderboardButtonClicked(w, h, mx, my)) {
+                        openLeaderboard();
+                    }
+                    return;
+                }
+
+                // 3. Game Over Screen State
+                if (gameOver) {
+                    if (DashboardHUD.isGameOverPlayAgainClicked(w, h, mx, my)) {
+                        initGame();
+                    } else if (DashboardHUD.isGameOverLeaderboardClicked(w, h, mx, my)) {
+                        openLeaderboard();
+                    } else if (DashboardHUD.isGameOverChangeDriverClicked(w, h, mx, my)) {
+                        changeDriver();
+                    }
+                    return;
+                }
+
+                // 4. In-Game Trophy (Leaderboard) Button
+                if (DashboardHUD.isTrophyButtonClicked(w, mx, my)) {
+                    openLeaderboard();
+                    return;
+                }
+
+                // 5. In-Game Pause / Play Button
+                if (DashboardHUD.isPauseButtonClicked(w, mx, my)) {
+                    togglePause();
+                    repaint();
+                    return;
+                }
+
+                // 6. In Pause Menu
+                if (isPaused) {
+                    if (DashboardHUD.isResumeButtonClicked(w, h, mx, my)) {
+                        togglePause();
+                        repaint();
+                    } else if (DashboardHUD.isPauseLeaderboardClicked(w, h, mx, my)) {
+                        openLeaderboard();
+                        repaint();
+                    }
+                    return;
+                }
+
+                // 7. Driving Foot Pedals: Brake and Gas
+                if (DashboardHUD.isBrakePedalHovered(h, mx, my)) {
+                    mouseBrakePressed = true;
+                    syncInputs();
+                    repaint();
+                } else if (DashboardHUD.isGasPedalHovered(w, h, mx, my)) {
+                    mouseGasPressed = true;
+                    syncInputs();
+                    repaint();
+                }
             }
-        });
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                mouseBrakePressed = false;
+                mouseGasPressed = false;
+                syncInputs();
+                repaint();
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (isPaused || gameOver || gameState != GameState.PLAYING) return;
+                int mx = e.getX();
+                int my = e.getY();
+                int w = getWidth();
+                int h = getHeight();
+
+                boolean inBrake = DashboardHUD.isBrakePedalHovered(h, mx, my);
+                boolean inGas = DashboardHUD.isGasPedalHovered(w, h, mx, my);
+
+                if (inBrake != mouseBrakePressed || inGas != mouseGasPressed) {
+                    mouseBrakePressed = inBrake;
+                    mouseGasPressed = inGas;
+                    syncInputs();
+                    repaint();
+                }
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                int mx = e.getX();
+                int my = e.getY();
+                int w = getWidth();
+                int h = getHeight();
+
+                if (gameState == GameState.SCOREBOARD) {
+                    if (DashboardHUD.isScoreboardCloseButtonClicked(w, h, mx, my)) {
+                        setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    } else {
+                        setCursor(Cursor.getDefaultCursor());
+                    }
+                } else if (gameState == GameState.LOGIN) {
+                    if (DashboardHUD.isStartRaceButtonClicked(w, h, mx, my) ||
+                        DashboardHUD.isLoginLeaderboardButtonClicked(w, h, mx, my)) {
+                        setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    } else {
+                        setCursor(Cursor.getDefaultCursor());
+                    }
+                } else if (gameOver) {
+                    if (DashboardHUD.isGameOverPlayAgainClicked(w, h, mx, my) ||
+                        DashboardHUD.isGameOverLeaderboardClicked(w, h, mx, my) ||
+                        DashboardHUD.isGameOverChangeDriverClicked(w, h, mx, my)) {
+                        setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    } else {
+                        setCursor(Cursor.getDefaultCursor());
+                    }
+                } else if (DashboardHUD.isTrophyButtonClicked(w, mx, my) ||
+                           DashboardHUD.isPauseButtonClicked(w, mx, my) ||
+                           (isPaused && (DashboardHUD.isResumeButtonClicked(w, h, mx, my) || DashboardHUD.isPauseLeaderboardClicked(w, h, mx, my))) ||
+                           DashboardHUD.isBrakePedalHovered(h, mx, my) ||
+                           DashboardHUD.isGasPedalHovered(w, h, mx, my)) {
+                    setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                } else {
+                    setCursor(Cursor.getDefaultCursor());
+                }
+            }
+        };
+
+        addMouseListener(ma);
+        addMouseMotionListener(ma);
     }
 
     private void startGameLoop() {
@@ -175,6 +496,10 @@ public class GamePanel extends JPanel {
     }
 
     private void updateGame() {
+        if (gameState != GameState.PLAYING || isPaused) {
+            return;
+        }
+
         if (!gameOver) {
             vehicle.update(terrain, particles);
             particles.update();
@@ -246,6 +571,17 @@ public class GamePanel extends JPanel {
             }
         }
 
+        // Record persistent high score on Game Over
+        if (gameOver && !scoreRecorded) {
+            isNewBestRecord = ScoreboardManager.recordScore(playerName, score, distanceMeters, coins);
+            playerBestScore = ScoreboardManager.getPlayerBestScore(playerName);
+            scoreRecorded = true;
+            if (isNewBestRecord) {
+                particles.addCoinSparkles(vehicle.x, vehicle.y - 30);
+                particles.addFloatingText(vehicle.x, vehicle.y - 60, "NEW BEST SCORE!", new Color(253, 224, 71));
+            }
+        }
+
         // Camera smoothly follows vehicle with lookahead
         double targetCamX = vehicle.x - getWidth() * 0.32 + vehicle.vx * 8.0;
         double targetCamY = vehicle.y - getHeight() * 0.60;
@@ -313,29 +649,19 @@ public class GamePanel extends JPanel {
         // 4. Render Particles (Dirt, Smoke, Sparkles)
         particles.render(g2, camX, camY);
 
-        // 5. Render Dashboard Gauges, Pedals, Score & Stage HUD
-        DashboardHUD.render(g2, w, h, vehicle, score, coins, stage, distanceMeters, 
-                           currentStunt, gasPressed, brakePressed);
+        // 5. Render HUD, Login Screen, Scoreboard Overlay or Game Over Screen
+        if (gameState == GameState.LOGIN) {
+            DashboardHUD.drawLoginScreen(g2, w, h);
+        } else if (gameState == GameState.PLAYING) {
+            DashboardHUD.render(g2, w, h, vehicle, score, coins, stage, distanceMeters, 
+                               currentStunt, gasPressed, brakePressed, isPaused, playerName, playerBestScore);
 
-        // 6. Game Over Screen
-        if (gameOver) {
-            g2.setColor(new Color(15, 23, 42, 220));
-            g2.fillRect(0, 0, w, h);
-
-            g2.setFont(new Font("Impact", Font.BOLD, 46));
-            g2.setColor(new Color(239, 68, 68));
-            FontMetrics fm = g2.getFontMetrics();
-            g2.drawString(gameOverReason, (w - fm.stringWidth(gameOverReason)) / 2, h / 2 - 40);
-
-            g2.setFont(new Font("Impact", Font.BOLD, 26));
-            g2.setColor(Color.WHITE);
-            String distStr = "DISTANCE REACHED: " + distanceMeters + " METERS";
-            g2.drawString(distStr, (w - g2.getFontMetrics().stringWidth(distStr)) / 2, h / 2 + 10);
-
-            g2.setFont(new Font("Impact", Font.BOLD, 22));
-            g2.setColor(new Color(251, 191, 36));
-            String restartStr = "PRESS [R] TO PLAY AGAIN";
-            g2.drawString(restartStr, (w - g2.getFontMetrics().stringWidth(restartStr)) / 2, h / 2 + 55);
+            if (gameOver) {
+                DashboardHUD.drawGameOverScreen(g2, w, h, gameOverReason, score, distanceMeters, coins, 
+                                               playerName, playerBestScore, isNewBestRecord);
+            }
+        } else if (gameState == GameState.SCOREBOARD) {
+            DashboardHUD.drawScoreboardOverlay(g2, w, h, playerName);
         }
 
         g2.dispose();

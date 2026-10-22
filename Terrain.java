@@ -76,11 +76,6 @@ public class Terrain {
     public double getBaseHeight(double x) {
         double base = 480.0;
 
-        // Flat starting straightaway
-        if (x < 240) {
-            return base + Math.sin(x * 0.006) * 5.0;
-        }
-
         // Smooth progressive difficulty factor (0.0 to 1.40+)
         double distM = x / 10.0;
         double diffFactor;
@@ -104,10 +99,14 @@ public class Terrain {
         double kickerAmp = 6.0 + diffFactor * 26.0;
 
         double hill1 = Math.sin(x * 0.0016) * mainHillAmp;
-        double hill2 = Math.cos(x * 0.0036) * secondaryAmp;
+        double hill2 = (Math.cos(x * 0.0036) - 1.0) * secondaryAmp;
         double hill3 = Math.sin(x * 0.0065) * kickerAmp;
 
-        return base + hill1 + hill2 + hill3;
+        // Smooth warmup blend from starting runway (0 to 300) with C1 Hermite continuity (eliminates any cliff drop!)
+        double warmup = Math.min(1.0, Math.max(0.0, x / 300.0));
+        double smoothWarmup = warmup * warmup * (3.0 - 2.0 * warmup);
+
+        return base + (hill1 + hill2 + hill3) * smoothWarmup;
     }
 
     public double getHeightAt(double x) {
