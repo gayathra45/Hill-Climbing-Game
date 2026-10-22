@@ -4,35 +4,32 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Advanced Multi-Biome Procedural Terrain Engine for Hill Climb Racing.
+ * Authentic Countryside Stage 4 Terrain Engine for Hill Climb Racing.
  * 
- * Features:
- * 1. Multi-Biome Environmental Progression:
- *    - 0m - 1200m: Emerald Countryside (Lush rolling pastures, rotating windmill, barn, cows, wildflowers).
- *    - 1200m - 2600m: Pine Forest Ridge (Tall spruce pines, deep ravines, wooden trestle bridges, steep inclines).
- *    - 2600m - 4200m: Red Rock Canyon & Cave Arches (Sandstone bluffs, overhead rock cave arch, jump ramps).
- *    - 4200m+: Alpine Snowy Summit (Snow-capped peaks, icy crests, extreme mountain passes).
- * 2. Track Architecture:
- *    - Overhead Checkpoint Gantry Gates with flashing LED beacons at 500m, 1000m, 1500m, 2000m.
- *    - Mega Wooden Jump Launch Ramps spanning ravines.
- *    - Wooden Suspension Bridges with steel catenary cables and trestle arches.
- *    - Natural Stone Cave Arches overhead.
- * 3. Geological Strata & Roadside Detail:
- *    - Procedural swaying grass blade tufts, rich topsoil crust, and stratified earth.
- *    - Roadside warning signs ("STEEP CLIMB 18%", "JUMP AHEAD").
+ * Accurately matches the user's reference photo:
+ * 1. Sky & Atmosphere:
+ *    - Vibrant azure blue gradient sky with fluffy clouds.
+ *    - Pastel neon star outlines (Pink, Green, Lilac) floating in the atmosphere.
+ *    - Distant green rolling hills, red barn farmhouse with white trim, and grazing cows.
+ * 2. Foreground Hills & Soil:
+ *    - Warm golden earth with bubble circle texture pattern.
+ *    - Thick dark organic loam soil band.
+ *    - Clustered golden wheat grass tufts along the soil edge.
+ * 3. Authentic Wooden Rope Suspension Bridge:
+ *    - Timber deck with sagging rope suspension and diagonal rope truss lashings.
+ *    - Heavy timber end pylon bound with rope windings.
+ *    - Green "34m" checkpoint pin.
  */
 public class Terrain {
     public static class Bridge {
         public double startX, endX;
         public double startY, endY;
-        public boolean isRamp;
 
-        public Bridge(double startX, double startY, double endX, double endY, boolean isRamp) {
+        public Bridge(double startX, double startY, double endX, double endY) {
             this.startX = startX;
             this.startY = startY;
             this.endX = endX;
             this.endY = endY;
-            this.isRamp = isRamp;
         }
 
         public boolean contains(double x) {
@@ -41,13 +38,8 @@ public class Terrain {
 
         public double getHeightAt(double x) {
             double t = (x - startX) / (endX - startX);
-            if (isRamp) {
-                // Curved takeoff ramp
-                return startY + (endY - startY) * Math.pow(t, 1.4);
-            } else {
-                double sag = Math.sin(t * Math.PI) * 16.0;
-                return (startY + (endY - startY) * t) + sag;
-            }
+            double sag = Math.sin(t * Math.PI) * 18.0;
+            return (startY + (endY - startY) * t) + sag;
         }
     }
 
@@ -56,13 +48,12 @@ public class Terrain {
     private double animTime = 0;
 
     public Terrain() {
-        // Wooden suspension bridges & mega jump ramps along the world
-        bridges.add(new Bridge(620, 470, 960, 490, false));   // Countryside Bridge 1
-        bridges.add(new Bridge(1450, 460, 1540, 410, true));  // Forest Mega Launch Ramp
-        bridges.add(new Bridge(2100, 480, 2520, 460, false));  // Forest Trestle Bridge
-        bridges.add(new Bridge(2950, 470, 3040, 420, true));  // Canyon Jump Takeoff Ramp
-        bridges.add(new Bridge(3750, 490, 4220, 480, false));  // Grand Canyon Suspension Chasm
-        bridges.add(new Bridge(5400, 475, 5850, 485, false));  // Alpine Snow Bridge
+        // Wooden rope bridges spanning scenic ravines
+        bridges.add(new Bridge(580, 480, 960, 500));
+        bridges.add(new Bridge(2200, 485, 2600, 475));
+        bridges.add(new Bridge(4100, 490, 4550, 485));
+        bridges.add(new Bridge(6200, 480, 6680, 495));
+        bridges.add(new Bridge(8500, 490, 9000, 480));
 
         for (int i = 0; i < 50; i++) {
             upcomingChunkQueue.enqueue(i * 250.0);
@@ -70,11 +61,10 @@ public class Terrain {
     }
 
     /**
-     * Advanced continuous height function with biome-specific topography:
-     * - Countryside: gentle rolling hills.
-     * - Forest Ridge: steeper grade climbs & deep dips.
-     * - Canyon: stepped sandstone mounds & jumps.
-     * - Alpine: extreme high-angle slopes.
+     * Exciting, smooth rolling hills mathematical height profile:
+     * - Flat starting runway for smooth launch.
+     * - Gentle rolling hill crests for soaring air-time jumps.
+     * - Challenging slope climbs and valley dips.
      */
     public double getHeightAt(double x) {
         for (Bridge b : bridges) {
@@ -85,35 +75,17 @@ public class Terrain {
 
         double base = 480.0;
 
-        // Flat starting straightaway
-        if (x < 260) {
-            return base + Math.sin(x * 0.006) * 8.0;
+        // Starting straightaway
+        if (x < 240) {
+            return base + Math.sin(x * 0.006) * 6.0;
         }
 
-        // Biome 1: Emerald Countryside (0 - 12000px / 0 - 1200m)
-        if (x < 12000) {
-            double hill1 = Math.sin(x * 0.0016) * 54.0;
-            double hill2 = Math.cos(x * 0.0035) * 26.0;
-            return base + hill1 + hill2;
-        }
-        // Biome 2: Pine Forest Ridge (12000 - 26000px / 1200m - 2600m)
-        else if (x < 26000) {
-            double steepClimb = Math.sin(x * 0.0022) * 78.0;
-            double dips = Math.cos(x * 0.0048) * 36.0;
-            return base + steepClimb + dips;
-        }
-        // Biome 3: Red Rock Canyon (26000 - 42000px / 2600m - 4200m)
-        else if (x < 42000) {
-            double plateau = Math.sin(x * 0.0018) * 85.0;
-            double jumpMound = Math.sin(x * 0.007) * 22.0;
-            return base + plateau + jumpMound;
-        }
-        // Biome 4: Alpine Snowy Summit (42000px+)
-        else {
-            double mountain = Math.sin(x * 0.0014) * 110.0;
-            double crest = Math.cos(x * 0.0032) * 45.0;
-            return base + mountain + crest;
-        }
+        // Varied rolling hill curves
+        double hill1 = Math.sin(x * 0.0018) * 58.0; // Main rolling crests
+        double hill2 = Math.cos(x * 0.0042) * 28.0; // Secondary slopes
+        double hill3 = Math.sin(x * 0.0008) * 35.0; // Long-range elevation rise & fall
+
+        return base + hill1 + hill2 + hill3;
     }
 
     public double getSlopeAt(double x) {
@@ -133,70 +105,41 @@ public class Terrain {
     public void render(Graphics2D g2, int screenW, int screenH, double camX, double camY) {
         animTime += 0.03;
 
-        // Current Biome identification based on camera center
-        double worldDistMeters = (camX + screenW / 2.0) / 10.0;
-
-        // 1. DYNAMIC SKY & SUN
-        drawDynamicSky(g2, screenW, screenH, worldDistMeters);
-
-        // 2. PARALLAX CLOUDS & SKYLINE
+        // 1. SKY & CLOUDS (Vibrant Azure Countryside Blue)
+        drawSky(g2, screenW, screenH);
         drawClouds(g2, screenW, camX);
 
-        // 3. DISTANT PARALLAX MOUNTAINS / CANYON BLUFFS (Layer 1: 0.09x)
-        drawDistantParallax(g2, screenW, screenH, camX * 0.09, worldDistMeters);
+        // 2. PASTEL NEON STARS (Pink, Green, Lilac outline stars like in photo!)
+        drawPastelStars(g2, screenW, camX);
 
-        // 4. MIDGROUND COUNTRYSIDE / FOREST / CANYON (Layer 2: 0.28x)
-        drawMidgroundScenery(g2, screenW, screenH, camX * 0.28, worldDistMeters);
+        // 3. PARALLAX DISTANT GREEN HILLS (0.10x)
+        drawDistantHills(g2, screenW, screenH, camX * 0.10);
 
-        // 5. TIMBER SUSPENSION BRIDGES & JUMP RAMPS
-        drawBridgesAndRamps(g2, camX, camY);
+        // 4. MIDGROUND COUNTRYSIDE (Red Barn, Cows, Windmill) (0.28x)
+        drawMidgroundCountryside(g2, screenW, screenH, camX * 0.28);
 
-        // 6. MAIN GROUND TERRAIN & MULTI-LAYER STRATA
-        drawForegroundTerrain(g2, screenW, screenH, camX, camY, worldDistMeters);
+        // 5. WOODEN ROPE SUSPENSION BRIDGES
+        drawSuspensionBridges(g2, camX, camY);
 
-        // 7. ROADSIDE CHECKPOINT GANTRIES, SIGNS, AND VEGETATION
-        drawRoadsideArchitecture(g2, screenW, camX, camY, worldDistMeters);
+        // 6. MAIN FOREGROUND HILLS (Golden Earth with circles, dark crust, wheat grass)
+        drawForegroundHills(g2, screenW, screenH, camX, camY);
+
+        // 7. ROADSIDE 34m PIN & TIMBER POSTS
+        drawRoadsideDetails(g2, screenW, camX, camY);
     }
 
-    private void drawDynamicSky(Graphics2D g2, int screenW, int screenH, double distMeters) {
-        Color skyTop;
-        Color skyBottom;
-
-        if (distMeters < 1200) {
-            // Azure Countryside Sky
-            skyTop = new Color(96, 165, 250);
-            skyBottom = new Color(224, 242, 254);
-        } else if (distMeters < 2600) {
-            // Forest Deep Blue Sky
-            skyTop = new Color(59, 130, 246);
-            skyBottom = new Color(219, 234, 254);
-        } else if (distMeters < 4200) {
-            // Canyon Warm Amber Sky
-            skyTop = new Color(249, 115, 22);
-            skyBottom = new Color(254, 243, 199);
-        } else {
-            // Alpine Crisp Violet Sky
-            skyTop = new Color(99, 102, 241);
-            skyBottom = new Color(238, 242, 255);
-        }
-
-        GradientPaint skyGrad = new GradientPaint(0, 0, skyTop, 0, screenH * 0.75f, skyBottom);
+    private void drawSky(Graphics2D g2, int screenW, int screenH) {
+        // Brilliant Azure Blue sky gradient matching reference photo
+        GradientPaint skyGrad = new GradientPaint(
+            0, 0, new Color(110, 195, 255),
+            0, screenH * 0.70f, new Color(224, 242, 254)
+        );
         g2.setPaint(skyGrad);
         g2.fillRect(0, 0, screenW, screenH);
-
-        // Radiant Sun with atmospheric glow
-        int sunX = 140;
-        int sunY = 85;
-        g2.setColor(new Color(254, 240, 138, 75));
-        g2.fillOval(sunX - 70, sunY - 70, 140, 140);
-        g2.setColor(new Color(253, 224, 71, 130));
-        g2.fillOval(sunX - 45, sunY - 45, 90, 90);
-        g2.setColor(new Color(255, 255, 245));
-        g2.fillOval(sunX - 25, sunY - 25, 50, 50);
     }
 
     private void drawClouds(Graphics2D g2, int screenW, double camX) {
-        g2.setColor(new Color(255, 255, 255, 200));
+        g2.setColor(new Color(255, 255, 255, 210));
         double cloudOffset = (camX * 0.05) % (screenW + 500);
 
         int[][] clouds = {
@@ -219,7 +162,48 @@ public class Terrain {
         }
     }
 
-    private void drawDistantParallax(Graphics2D g2, int screenW, int screenH, double scrollX, double distMeters) {
+    private void drawPastelStars(Graphics2D g2, int screenW, double camX) {
+        // Large outline stars floating in sky (Just like the reference photo!)
+        int cycle = 850;
+
+        // Big Pink Star
+        int sx1 = (int) (220 - ((camX * 0.18) % cycle));
+        if (sx1 < -120) sx1 += cycle;
+        g2.setColor(new Color(244, 114, 182, 170));
+        g2.setStroke(new BasicStroke(3.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        drawStarShape(g2, sx1, 150, 65, 30, 5);
+
+        // Big Lilac/Purple Star
+        int sx2 = (int) (680 - ((camX * 0.18) % cycle));
+        if (sx2 < -120) sx2 += cycle;
+        g2.setColor(new Color(192, 132, 252, 170));
+        drawStarShape(g2, sx2, 120, 75, 34, 5);
+
+        // Small Lime Star
+        int sx3 = (int) (980 - ((camX * 0.18) % cycle));
+        if (sx3 < -120) sx3 += cycle;
+        g2.setColor(new Color(163, 230, 53, 170));
+        drawStarShape(g2, sx3, 220, 36, 16, 5);
+
+        g2.setStroke(new BasicStroke(1));
+    }
+
+    private void drawStarShape(Graphics2D g2, int cx, int cy, int outerR, int innerR, int points) {
+        double angleStep = Math.PI / points;
+        int[] xPts = new int[points * 2];
+        int[] yPts = new int[points * 2];
+        double currentAngle = -Math.PI / 2;
+
+        for (int i = 0; i < points * 2; i++) {
+            int r = (i % 2 == 0) ? outerR : innerR;
+            xPts[i] = cx + (int) (Math.cos(currentAngle) * r);
+            yPts[i] = cy + (int) (Math.sin(currentAngle) * r);
+            currentAngle += angleStep;
+        }
+        g2.drawPolygon(xPts, yPts, points * 2);
+    }
+
+    private void drawDistantHills(Graphics2D g2, int screenW, int screenH, double scrollX) {
         Path2D.Double path = new Path2D.Double();
         path.moveTo(0, screenH);
 
@@ -232,15 +216,15 @@ public class Terrain {
         path.lineTo(screenW, screenH);
         path.closePath();
 
-        Color distTop = (distMeters > 2600) ? new Color(249, 115, 22, 160) : new Color(147, 245, 175, 170);
-        Color distBottom = (distMeters > 2600) ? new Color(194, 65, 12, 210) : new Color(74, 222, 128, 210);
-
-        GradientPaint distGrad = new GradientPaint(0, 180, distTop, 0, screenH, distBottom);
+        GradientPaint distGrad = new GradientPaint(
+            0, 180, new Color(147, 245, 175, 180),
+            0, screenH, new Color(74, 222, 128, 220)
+        );
         g2.setPaint(distGrad);
         g2.fill(path);
     }
 
-    private void drawMidgroundScenery(Graphics2D g2, int screenW, int screenH, double scrollX, double distMeters) {
+    private void drawMidgroundCountryside(Graphics2D g2, int screenW, int screenH, double scrollX) {
         Path2D.Double midPath = new Path2D.Double();
         midPath.moveTo(0, screenH);
 
@@ -253,171 +237,116 @@ public class Terrain {
         midPath.lineTo(screenW, screenH);
         midPath.closePath();
 
-        Color midTop = (distMeters > 2600) ? new Color(254, 215, 170, 220) : new Color(254, 240, 138, 220);
-        Color midBottom = (distMeters > 2600) ? new Color(234, 88, 12, 230) : new Color(163, 230, 53, 230);
-
-        GradientPaint midGrad = new GradientPaint(0, 310, midTop, 0, screenH, midBottom);
+        GradientPaint midGrad = new GradientPaint(
+            0, 310, new Color(254, 240, 138, 220),
+            0, screenH, new Color(163, 230, 53, 230)
+        );
         g2.setPaint(midGrad);
         g2.fill(midPath);
 
-        // Biome Specific Midground Landmark
-        if (distMeters < 1200) {
-            // Countryside Windmill & Barn
-            drawWindmill(g2, (int) (320 - (scrollX % 1400)), 330);
-            drawBarn(g2, (int) (740 - (scrollX % 1000)), 350);
-        } else if (distMeters < 2600) {
-            // Pine Forest Watchtower & Spruce groves
-            drawWatchtower(g2, (int) (480 - (scrollX % 1200)), 330);
-        } else {
-            // Canyon Sandstone Mesas & Rocks
-            drawCanyonPillars(g2, (int) (400 - (scrollX % 900)), 320);
-        }
-    }
-
-    private void drawWindmill(Graphics2D g2, int wx, int wy) {
-        if (wx < -140 || wx > 1200) return;
-        g2.setColor(new Color(241, 245, 249));
-        int[] mtx = {wx - 14, wx + 14, wx + 9, wx - 9};
-        int[] mty = {wy + 48, wy + 48, wy, wy};
-        g2.fillPolygon(mtx, mty, 4);
-        g2.setColor(new Color(148, 163, 184));
-        g2.drawPolygon(mtx, mty, 4);
+        // Country Red Barn
+        int barnCycle = 950;
+        int bx = (int) (700 - (scrollX % barnCycle));
+        if (bx < -140) bx += barnCycle;
+        int by = 350;
 
         g2.setColor(new Color(185, 28, 28));
-        g2.fillPolygon(new int[]{wx - 12, wx + 12, wx}, new int[]{wy, wy, wy - 15}, 3);
-
-        Graphics2D wg = (Graphics2D) g2.create();
-        wg.translate(wx, wy + 4);
-        wg.rotate(animTime * 1.2);
-        wg.setColor(new Color(100, 116, 139));
-        wg.setStroke(new BasicStroke(2.0f));
-        for (int a = 0; a < 4; a++) {
-            wg.rotate(Math.PI / 2);
-            wg.drawLine(0, 0, 0, -32);
-            wg.setColor(new Color(255, 255, 255, 220));
-            wg.fillRect(2, -30, 9, 20);
-            wg.setColor(new Color(100, 116, 139));
-            wg.drawRect(2, -30, 9, 20);
-        }
-        wg.dispose();
-    }
-
-    private void drawBarn(Graphics2D g2, int bx, int by) {
-        if (bx < -140 || bx > 1200) return;
-        g2.setColor(new Color(185, 28, 28));
-        g2.fillRect(bx, by, 70, 44);
+        g2.fillRect(bx, by, 65, 42);
         g2.setColor(Color.WHITE);
-        g2.fillPolygon(new int[]{bx - 5, bx + 35, bx + 75}, new int[]{by, by - 24, by}, 3);
+        g2.fillPolygon(new int[]{bx - 5, bx + 32, bx + 70}, new int[]{by, by - 22, by}, 3);
         g2.setColor(new Color(30, 41, 59));
-        g2.fillRect(bx + 24, by + 16, 22, 28);
+        g2.fillRect(bx + 22, by + 16, 22, 26);
+
+        // Grazing cows
+        drawPastureCow(g2, bx + 105, by + 26);
+        drawPastureCow(g2, bx + 135, by + 28);
     }
 
-    private void drawWatchtower(Graphics2D g2, int tx, int ty) {
-        if (tx < -120 || tx > 1200) return;
-        g2.setColor(new Color(120, 53, 15));
-        g2.setStroke(new BasicStroke(3.0f));
-        g2.drawLine(tx - 12, ty + 60, tx - 6, ty);
-        g2.drawLine(tx + 12, ty + 60, tx + 6, ty);
-        g2.drawLine(tx - 12, ty + 60, tx + 6, ty + 20);
-        g2.drawLine(tx + 12, ty + 60, tx - 6, ty + 20);
-        // Cabin
-        g2.fillRect(tx - 14, ty - 16, 28, 16);
-        g2.setColor(new Color(185, 28, 28));
-        g2.fillPolygon(new int[]{tx - 18, tx + 18, tx}, new int[]{ty - 16, ty - 16, ty - 28}, 3);
-        g2.setStroke(new BasicStroke(1));
+    private void drawPastureCow(Graphics2D g2, int cx, int cy) {
+        g2.setColor(Color.WHITE);
+        g2.fillRoundRect(cx, cy, 24, 15, 5, 5);
+        g2.setColor(new Color(15, 23, 42));
+        g2.fillOval(cx + 4, cy + 2, 7, 7);
+        g2.fillOval(cx + 14, cy + 5, 6, 6);
+        g2.setColor(Color.WHITE);
+        g2.fillOval(cx + 20, cy - 3, 10, 9);
+        g2.setColor(new Color(15, 23, 42));
+        g2.fillOval(cx + 25, cy - 1, 4, 4);
+        g2.setColor(Color.WHITE);
+        g2.fillRect(cx + 3, cy + 14, 3, 8);
+        g2.fillRect(cx + 8, cy + 14, 3, 8);
+        g2.fillRect(cx + 15, cy + 14, 3, 8);
+        g2.fillRect(cx + 20, cy + 14, 3, 8);
     }
 
-    private void drawCanyonPillars(Graphics2D g2, int px, int py) {
-        if (px < -120 || px > 1200) return;
-        GradientPaint rockGrad = new GradientPaint(px - 25, py, new Color(234, 88, 12), px + 25, py + 80, new Color(154, 52, 18));
-        g2.setPaint(rockGrad);
-        g2.fillRoundRect(px - 25, py, 50, 75, 12, 12);
-        g2.fillRoundRect(px + 40, py + 15, 35, 60, 8, 8);
-    }
-
-    private void drawBridgesAndRamps(Graphics2D g2, double camX, double camY) {
+    private void drawSuspensionBridges(Graphics2D g2, double camX, double camY) {
         for (Bridge b : bridges) {
             int t1x = (int) (b.startX - camX);
             int t1y = (int) (b.startY - camY);
             int t2x = (int) (b.endX - camX);
             int t2y = (int) (b.endY - camY);
 
-            if (b.isRamp) {
-                // Mega Jump Takeoff Ramp (Heavy wooden scaffolding structure)
-                g2.setColor(new Color(120, 53, 15));
-                g2.setStroke(new BasicStroke(4.0f));
-                g2.drawLine(t1x, t1y + 20, t2x, t2y);
-                g2.drawLine(t2x, t2y, t2x, t2y + 65);
-                g2.drawLine(t1x, t1y + 20, t2x, t2y + 65);
+            // Right Timber Pylon with Rope Bindings (Matching photo!)
+            drawRopeTimberPost(g2, t2x, t2y);
 
-                // Ramp face surface
-                GradientPaint rampGrad = new GradientPaint(t1x, t1y, new Color(245, 158, 11), t2x, t2y, new Color(180, 83, 9));
-                g2.setPaint(rampGrad);
-                Path2D.Double rPoly = new Path2D.Double();
-                rPoly.moveTo(t1x, t1y);
-                for (double x = b.startX; x <= b.endX; x += 10) {
-                    rPoly.lineTo(x - camX, b.getHeightAt(x) - camY);
-                }
-                rPoly.lineTo(t2x, t2y + 8);
-                rPoly.lineTo(t1x, t1y + 8);
-                rPoly.closePath();
-                g2.fill(rPoly);
-                g2.setColor(Color.WHITE);
-                g2.drawString(">> JUMP >>", t1x + 15, t1y - 12);
+            // Sagging Rope Suspension Cables
+            g2.setColor(new Color(217, 119, 6));
+            g2.setStroke(new BasicStroke(3.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 
-            } else {
-                // Timber Suspension Bridge with steel cables and deck planks
-                drawBridgeTower(g2, t1x, t1y);
-                drawBridgeTower(g2, t2x, t2y);
+            Path2D.Double mainRope = new Path2D.Double();
+            mainRope.moveTo(t1x, t1y - 25);
 
-                g2.setColor(new Color(245, 158, 11));
-                g2.setStroke(new BasicStroke(3.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            for (double x = b.startX; x <= b.endX; x += 14) {
+                double sx = x - camX;
+                double sy = b.getHeightAt(x) - camY - 22;
+                mainRope.lineTo(sx, sy);
 
-                Path2D.Double mainCable = new Path2D.Double();
-                mainCable.moveTo(t1x, t1y - 32);
+                // Diagonal rope lattice truss lashings (Exactly as seen in photo!)
+                g2.setColor(new Color(180, 83, 9));
+                g2.setStroke(new BasicStroke(1.4f));
+                g2.drawLine((int) sx, (int) sy, (int) (sx + 10), (int) (b.getHeightAt(x) - camY));
+                g2.drawLine((int) sx, (int) sy, (int) (sx - 10), (int) (b.getHeightAt(x) - camY));
+            }
+            g2.setStroke(new BasicStroke(3.0f));
+            g2.setColor(new Color(245, 158, 11));
+            g2.draw(mainRope);
 
-                for (double x = b.startX; x <= b.endX; x += 14) {
-                    double sx = x - camX;
-                    double sy = b.getHeightAt(x) - camY - 24;
-                    mainCable.lineTo(sx, sy);
+            // Wooden Deck Planks
+            for (double x = b.startX; x <= b.endX; x += 15) {
+                int px = (int) (x - camX);
+                int py = (int) (b.getHeightAt(x) - camY);
 
-                    g2.setColor(new Color(217, 119, 6));
-                    g2.setStroke(new BasicStroke(1.2f));
-                    g2.drawLine((int) sx, (int) sy, (int) sx, (int) (b.getHeightAt(x) - camY));
-                }
-                g2.setStroke(new BasicStroke(3.0f));
-                g2.draw(mainCable);
+                g2.setColor(new Color(67, 20, 7, 110));
+                g2.fillRoundRect(px - 7, py + 2, 16, 7, 3, 3);
 
-                // Wooden deck planks with grain & shadows
-                for (double x = b.startX; x <= b.endX; x += 15) {
-                    int px = (int) (x - camX);
-                    int py = (int) (b.getHeightAt(x) - camY);
-
-                    g2.setColor(new Color(67, 20, 7, 120));
-                    g2.fillRoundRect(px - 7, py + 2, 16, 7, 3, 3);
-
-                    GradientPaint plankGrad = new GradientPaint(px - 7, py - 4, new Color(217, 119, 6), px + 9, py + 4, new Color(146, 64, 14));
-                    g2.setPaint(plankGrad);
-                    g2.fillRoundRect(px - 7, py - 4, 15, 8, 3, 3);
-                    g2.setColor(new Color(67, 20, 7));
-                    g2.drawRoundRect(px - 7, py - 4, 15, 8, 3, 3);
-                }
+                GradientPaint plankGrad = new GradientPaint(px - 7, py - 4, new Color(217, 119, 6), px + 9, py + 4, new Color(146, 64, 14));
+                g2.setPaint(plankGrad);
+                g2.fillRoundRect(px - 7, py - 4, 15, 8, 3, 3);
+                g2.setColor(new Color(67, 20, 7));
+                g2.drawRoundRect(px - 7, py - 4, 15, 8, 3, 3);
             }
             g2.setStroke(new BasicStroke(1));
         }
     }
 
-    private void drawBridgeTower(Graphics2D g2, int tx, int ty) {
-        GradientPaint timberGrad = new GradientPaint(tx - 5, ty, new Color(146, 64, 14), tx + 5, ty, new Color(67, 20, 7));
-        g2.setPaint(timberGrad);
-        g2.fillRect(tx - 6, ty - 42, 12, 140);
-        g2.setColor(new Color(71, 85, 105));
-        g2.fillRect(tx - 7, ty - 34, 14, 5);
-        g2.fillRect(tx - 7, ty - 8, 14, 5);
-        g2.fillRect(tx - 7, ty + 24, 14, 5);
+    private void drawRopeTimberPost(Graphics2D g2, int tx, int ty) {
+        // Thick weathered wooden post
+        GradientPaint postGrad = new GradientPaint(tx - 6, ty - 50, new Color(180, 83, 9), tx + 8, ty + 40, new Color(120, 53, 15));
+        g2.setPaint(postGrad);
+        g2.fillRoundRect(tx - 6, ty - 52, 15, 85, 4, 4);
+        g2.setColor(new Color(67, 20, 7));
+        g2.drawRoundRect(tx - 6, ty - 52, 15, 85, 4, 4);
+
+        // Rope coils wound around the top of the post (just like the photo!)
+        g2.setColor(new Color(254, 240, 138));
+        g2.setStroke(new BasicStroke(3.0f));
+        g2.drawLine(tx - 7, ty - 38, tx + 9, ty - 38);
+        g2.drawLine(tx - 7, ty - 34, tx + 9, ty - 34);
+        g2.drawLine(tx - 7, ty - 30, tx + 9, ty - 30);
+        g2.setStroke(new BasicStroke(1));
     }
 
-    private void drawForegroundTerrain(Graphics2D g2, int screenW, int screenH, double camX, double camY, double distMeters) {
+    private void drawForegroundHills(Graphics2D g2, int screenW, int screenH, double camX, double camY) {
         Path2D.Double groundPath = new Path2D.Double();
         groundPath.moveTo(0, screenH);
 
@@ -439,176 +368,102 @@ public class Terrain {
         groundPath.lineTo(screenW + 20, screenH);
         groundPath.closePath();
 
-        // Subsurface Earth Stratification (Biome-dependent colors)
-        Color earthTop;
-        Color earthBottom;
-        Color crustCol;
-        Color surfaceGrassCol;
-
-        if (distMeters < 1200) {
-            earthTop = new Color(245, 158, 11);
-            earthBottom = new Color(180, 83, 9);
-            crustCol = new Color(120, 53, 15);
-            surfaceGrassCol = new Color(132, 204, 22);
-        } else if (distMeters < 2600) {
-            earthTop = new Color(180, 83, 9);
-            earthBottom = new Color(113, 63, 18);
-            crustCol = new Color(67, 34, 12);
-            surfaceGrassCol = new Color(34, 197, 94);
-        } else if (distMeters < 4200) {
-            earthTop = new Color(234, 88, 12);
-            earthBottom = new Color(154, 52, 18);
-            crustCol = new Color(124, 45, 18);
-            surfaceGrassCol = new Color(249, 115, 22);
-        } else {
-            earthTop = new Color(203, 213, 225);
-            earthBottom = new Color(100, 116, 139);
-            crustCol = new Color(71, 85, 105);
-            surfaceGrassCol = new Color(241, 245, 249);
-        }
-
-        // Earth fill
-        GradientPaint earthGrad = new GradientPaint(0, 350, earthTop, 0, screenH, earthBottom);
+        // 1. Golden Earth Body with gradient (Exact color from photo: warm golden amber)
+        GradientPaint earthGrad = new GradientPaint(
+            0, 350, new Color(245, 158, 11),
+            0, screenH, new Color(217, 119, 6)
+        );
         g2.setPaint(earthGrad);
         g2.fill(groundPath);
 
-        // Sedimentary strata lines
-        g2.setColor(new Color(217, 119, 6, 130));
-        g2.setStroke(new BasicStroke(2.0f));
-        for (int i = 0; i < points - 1; i += 2) {
+        // 2. Texture: Organic Circle Pattern inside the golden earth (Matching photo!)
+        g2.setColor(new Color(234, 138, 8, 110));
+        for (int i = 0; i < points - 1; i += 6) {
             double sx = xVals[i];
-            double sy = yVals[i] + 35 + Math.sin(sx * 0.04) * 6;
+            double sy = yVals[i] + 45 + Math.sin(sx * 0.03) * 12;
             if (sy < screenH) {
-                g2.drawLine((int) sx, (int) sy, (int) (sx + step * 2), (int) sy);
+                g2.fillOval((int) sx - 14, (int) sy - 14, 28, 28);
+                g2.setColor(new Color(251, 191, 36, 120));
+                g2.fillOval((int) sx - 6, (int) sy - 6, 12, 12);
+                g2.setColor(new Color(234, 138, 8, 110));
             }
         }
 
-        // Dark Organic Topsoil Crust (8px)
-        g2.setColor(crustCol);
-        g2.setStroke(new BasicStroke(10.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        // 3. Thick Rich Dark Brown Organic Soil Band (12px)
+        g2.setColor(new Color(101, 47, 15));
+        g2.setStroke(new BasicStroke(11.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         Path2D.Double crustPath = new Path2D.Double();
-        crustPath.moveTo(xVals[0], yVals[0] + 4);
+        crustPath.moveTo(xVals[0], yVals[0] + 5);
         for (int i = 1; i < points; i++) {
-            crustPath.lineTo(xVals[i], yVals[i] + 4);
+            crustPath.lineTo(xVals[i], yVals[i] + 5);
         }
         g2.draw(crustPath);
 
-        // Vibrant Surface Grass Line
-        g2.setColor(surfaceGrassCol);
-        g2.setStroke(new BasicStroke(5.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        Path2D.Double grassPath = new Path2D.Double();
-        grassPath.moveTo(xVals[0], yVals[0]);
+        // Top edge dark outline
+        g2.setColor(new Color(67, 20, 7));
+        g2.setStroke(new BasicStroke(3.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        Path2D.Double edgePath = new Path2D.Double();
+        edgePath.moveTo(xVals[0], yVals[0]);
         for (int i = 1; i < points; i++) {
-            grassPath.lineTo(xVals[i], yVals[i]);
+            edgePath.lineTo(xVals[i], yVals[i]);
         }
-        g2.draw(grassPath);
+        g2.draw(edgePath);
 
-        // Swaying Grass Blades & Flora
-        g2.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        for (int i = 0; i < points; i += 3) {
+        // 4. Clumps of Golden Wheat Grass Tufts (Warm golden meadow stalks like the photo!)
+        for (int i = 0; i < points; i += 4) {
             double wx = camX + xVals[i];
             if (isBridgeAt(wx)) continue;
 
             double gx = xVals[i];
             double gy = yVals[i];
-            double wind = Math.sin(wx * 0.08 + animTime * 2.0) * 3.5;
+            double wind = Math.sin(wx * 0.08 + animTime * 2.0) * 2.5;
 
-            g2.setColor(surfaceGrassCol);
-            g2.drawLine((int) gx, (int) gy, (int) (gx + wind - 2), (int) (gy - 7));
+            // Clump of 3-4 golden wheat stalks
+            g2.setColor(new Color(234, 179, 8));
+            g2.setStroke(new BasicStroke(2.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g2.drawLine((int) gx, (int) gy, (int) (gx + wind - 2), (int) (gy - 13));
+            g2.drawLine((int) gx + 3, (int) gy, (int) (gx + 3 + wind + 2), (int) (gy - 17));
+
             g2.setColor(new Color(254, 240, 138));
-            g2.drawLine((int) (gx + 3), (int) gy, (int) (gx + 3 + wind + 2), (int) (gy - 9));
+            g2.setStroke(new BasicStroke(1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g2.drawLine((int) gx + 1, (int) gy, (int) (gx + 1 + wind), (int) (gy - 15));
         }
 
         g2.setStroke(new BasicStroke(1));
     }
 
-    private void drawRoadsideArchitecture(Graphics2D g2, int screenW, double camX, double camY, double distMeters) {
-        // -------------------------------------------------------------
-        // OVERHEAD CHECKPOINT GANTRY GATES (At 500m, 1000m, 1500m, 2000m...)
-        // -------------------------------------------------------------
-        int[] checkpoints = {500, 1000, 1500, 2000, 3000};
-        for (int cp : checkpoints) {
-            double cpX = cp * 10.0;
-            int sx = (int) (cpX - camX);
-            int sy = (int) (getHeightAt(cpX) - camY);
-
-            if (sx > -100 && sx < screenW + 100) {
-                drawCheckpointGantry(g2, sx, sy, cp);
-            }
-        }
-
-        // Roadside warning signs ("STEEP CLIMB 18%", "JUMP AHEAD")
-        drawWarningSign(g2, (int) (1400 - camX), (int) (getHeightAt(1400) - camY), "JUMP!");
-        drawWarningSign(g2, (int) (2900 - camX), (int) (getHeightAt(2900) - camY), "RAMP!");
-
-        // 34m Milestone Pin
+    private void drawRoadsideDetails(Graphics2D g2, int screenW, double camX, double camY) {
+        // Green Checkpoint Pin at 34m (Exact match to the reference photo!)
         double pinWorldX = 340.0;
         int px = (int) (pinWorldX - camX);
         int py = (int) (getHeightAt(pinWorldX) - camY);
+
         if (px > -60 && px < screenW + 60) {
-            g2.setColor(new Color(34, 197, 94));
-            g2.fillOval(px - 11, py - 32, 22, 22);
-            g2.fillPolygon(new int[]{px - 8, px + 8, px}, new int[]{py - 20, py - 20, py - 3}, 3);
+            // Dark pin shadow
+            g2.setColor(new Color(15, 23, 42, 70));
+            g2.fillOval(px - 10, py + 2, 20, 6);
+
+            // Green map marker body
+            g2.setColor(new Color(22, 163, 74));
+            g2.fillOval(px - 10, py - 30, 20, 20);
+            g2.fillPolygon(new int[]{px - 7, px + 7, px}, new int[]{py - 18, py - 18, py - 3}, 3);
+
+            // White dot
             g2.setColor(Color.WHITE);
-            g2.fillOval(px - 4, py - 25, 8, 8);
-            g2.setFont(new Font("Impact", Font.BOLD, 14));
-            g2.drawString("34m", px + 13, py - 14);
+            g2.fillOval(px - 4, py - 24, 8, 8);
+
+            // Black outer border
+            g2.setColor(new Color(15, 23, 42));
+            g2.setStroke(new BasicStroke(1.5f));
+            g2.drawOval(px - 10, py - 30, 20, 20);
+            g2.setStroke(new BasicStroke(1));
+
+            // "34m" text
+            g2.setFont(new Font("Impact", Font.BOLD, 15));
+            g2.setColor(new Color(15, 23, 42));
+            g2.drawString("34m", px + 15, py - 14);
+            g2.setColor(Color.WHITE);
+            g2.drawString("34m", px + 14, py - 15);
         }
-    }
-
-    private void drawCheckpointGantry(Graphics2D g2, int sx, int sy, int meters) {
-        // Left & Right Steel Lattice Pillars
-        g2.setColor(new Color(71, 85, 105));
-        g2.setStroke(new BasicStroke(4.0f));
-        g2.drawLine(sx - 40, sy, sx - 40, sy - 110);
-        g2.drawLine(sx + 40, sy, sx + 40, sy - 110);
-
-        // Overhead Truss Span
-        g2.fillRect(sx - 46, sy - 110, 92, 14);
-        g2.setStroke(new BasicStroke(1));
-
-        // Checkered Banner
-        g2.setColor(Color.WHITE);
-        g2.fillRect(sx - 36, sy - 96, 72, 22);
-        g2.setColor(Color.BLACK);
-        for (int i = 0; i < 6; i++) {
-            if (i % 2 == 0) {
-                g2.fillRect(sx - 36 + i * 12, sy - 96, 12, 11);
-                g2.fillRect(sx - 36 + (i + 1) * 12, sy - 85, 12, 11);
-            }
-        }
-
-        // Distance text badge
-        g2.setFont(new Font("Impact", Font.BOLD, 14));
-        g2.setColor(new Color(251, 191, 36));
-        g2.drawString(meters + "m CHECKPOINT", sx - 44, sy - 115);
-
-        // Flashing LED beacons on top
-        boolean blink = ((int) (animTime * 10)) % 2 == 0;
-        g2.setColor(blink ? new Color(34, 197, 94) : new Color(239, 68, 68));
-        g2.fillOval(sx - 44, sy - 124, 10, 10);
-        g2.fillOval(sx + 34, sy - 124, 10, 10);
-    }
-
-    private void drawWarningSign(Graphics2D g2, int sx, int sy, String text) {
-        if (sx < -60 || sx > 1200) return;
-        // Post
-        g2.setColor(new Color(100, 116, 139));
-        g2.fillRect(sx - 2, sy - 36, 4, 38);
-        // Diamond Yellow Warning Sign
-        Polygon diamond = new Polygon();
-        diamond.addPoint(sx, sy - 54);
-        diamond.addPoint(sx + 18, sy - 36);
-        diamond.addPoint(sx, sy - 18);
-        diamond.addPoint(sx - 18, sy - 36);
-        g2.setColor(new Color(251, 191, 36));
-        g2.fillPolygon(diamond);
-        g2.setColor(Color.BLACK);
-        g2.setStroke(new BasicStroke(1.5f));
-        g2.drawPolygon(diamond);
-        g2.setFont(new Font("Impact", Font.BOLD, 9));
-        FontMetrics fm = g2.getFontMetrics();
-        g2.drawString(text, sx - fm.stringWidth(text) / 2, sy - 33);
-        g2.setStroke(new BasicStroke(1));
     }
 }

@@ -39,6 +39,7 @@ public class GamePanel extends JPanel {
     // Game state
     private boolean gameOver = false;
     private String gameOverReason = "";
+    private int crashAnimationTimer = 85;
 
     public GamePanel() {
         setBackground(new Color(125, 211, 252));
@@ -62,12 +63,12 @@ public class GamePanel extends JPanel {
         spawnCoinArcs();
 
         // Spawn fuel cans at regular intervals across extended map
-        for (double fx = 650; fx <= 50000; fx += 750) {
-            collectibles.addLast(new Collectible(fx, terrain.getHeightAt(fx) - 30, Collectible.Type.FUEL));
+        for (double fx = 650; fx <= 50000; fx += 800) {
+            collectibles.addLast(new Collectible(fx, terrain.getHeightAt(fx) - 32, Collectible.Type.FUEL));
         }
 
         // Spawn bonus stars
-        for (double sx = 950; sx <= 50000; sx += 1100) {
+        for (double sx = 950; sx <= 50000; sx += 1200) {
             collectibles.addLast(new Collectible(sx, terrain.getHeightAt(sx) - 75, Collectible.Type.BONUS_STAR));
         }
 
@@ -77,25 +78,46 @@ public class GamePanel extends JPanel {
         distanceMeters = 0;
         gameOver = false;
         gameOverReason = "";
+        crashAnimationTimer = 85;
     }
 
     private void spawnCoinArcs() {
-        // Coin arc over the first bridge (X: 620 to 920)
-        double[] arcOffsets = {620, 660, 700, 740, 780, 820, 860, 900};
-        for (int i = 0; i < arcOffsets.length; i++) {
-            double cx = arcOffsets[i];
-            double cy = terrain.getHeightAt(cx) - 60 - Math.sin((double) i / (arcOffsets.length - 1) * Math.PI) * 35;
-            Collectible.Type t = (i < 2) ? Collectible.Type.COIN_25 : Collectible.Type.COIN_5;
-            collectibles.addLast(new Collectible(cx, cy, t));
+        // 1. Rainbow Jump Arc over the bridge (Exact match to the reference photo!)
+        // In the photo: 7 coins arching over the wooden suspension bridge (600 to 940)
+        double bStartX = 600;
+        double bEndX = 940;
+        double startY = terrain.getHeightAt(bStartX);
+        double endY = terrain.getHeightAt(bEndX);
+
+        for (int i = 0; i < 7; i++) {
+            double t = (double) i / 6.0;
+            double cx = bStartX + (bEndX - bStartX) * (0.08 + 0.84 * t);
+            double baseLineY = startY + (endY - startY) * t;
+            double cy = baseLineY - 48.0 - Math.sin(t * Math.PI) * 72.0;
+            Collectible.Type tType = (i < 2) ? Collectible.Type.COIN_25 : Collectible.Type.COIN_5;
+            collectibles.addLast(new Collectible(cx, cy, tType));
         }
 
-        // Additional repeating jump coin arcs over rolling hill crests & jump ramps up to 50,000px
-        for (double base = 1200; base < 50000; base += 900) {
-            for (int i = 0; i < 7; i++) {
-                double cx = base + i * 45;
-                double cy = terrain.getHeightAt(cx) - 50 - Math.sin((double) i / 6.0 * Math.PI) * 40;
-                Collectible.Type t = (i == 3) ? Collectible.Type.COIN_25 : Collectible.Type.COIN_5;
-                collectibles.addLast(new Collectible(cx, cy, t));
+        // 2. Beautiful Hill-Hugging Coin Chains along rolling crests:
+        // Every coin follows the terrain slope smoothly at an exact uniform height (terrain.getHeightAt(cx) - 36.0)
+        for (double base = 1150; base < 50000; base += 750) {
+            if (terrain.isBridgeAt(base) || terrain.isBridgeAt(base + 240)) {
+                // Jump arc across bridge
+                for (int i = 0; i < 6; i++) {
+                    double t = (double) i / 5.0;
+                    double cx = base + i * 42;
+                    double cy = terrain.getHeightAt(base) - 45.0 - Math.sin(t * Math.PI) * 60.0;
+                    Collectible.Type tType = (i == 2 || i == 3) ? Collectible.Type.COIN_25 : Collectible.Type.COIN_5;
+                    collectibles.addLast(new Collectible(cx, cy, tType));
+                }
+            } else {
+                // Smooth terrain-contour-following coin chain (hugs the hill curves perfectly!)
+                for (int i = 0; i < 6; i++) {
+                    double cx = base + i * 40;
+                    double cy = terrain.getHeightAt(cx) - 36.0; // Exactly hugs the hill contour!
+                    Collectible.Type tType = (i == 2) ? Collectible.Type.COIN_25 : Collectible.Type.COIN_5;
+                    collectibles.addLast(new Collectible(cx, cy, tType));
+                }
             }
         }
     }
@@ -187,8 +209,12 @@ public class GamePanel extends JPanel {
 
             // Game over checks
             if (vehicle.crashed) {
-                gameOver = true;
-                gameOverReason = "DRIVER DOWN! HEAD IMPACT";
+                if (crashAnimationTimer > 0) {
+                    crashAnimationTimer--;
+                } else {
+                    gameOver = true;
+                    gameOverReason = "DRIVER DOWN! ACCIDENT";
+                }
             } else if (vehicle.fuel <= 0 && Math.abs(vehicle.vx) < 0.1 && vehicle.rearGrounded) {
                 gameOver = true;
                 gameOverReason = "OUT OF FUEL!";

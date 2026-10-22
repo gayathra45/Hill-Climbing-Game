@@ -158,6 +158,26 @@ public class ParticleManager {
         }
     }
 
+    public void addCrashSparks(double x, double y) {
+        for (int i = 0; i < 8; i++) {
+            double angle = Math.random() * Math.PI * 2;
+            double speed = 2.0 + Math.random() * 5.0;
+            double vx = Math.cos(angle) * speed;
+            double vy = Math.sin(angle) * speed - 1.5;
+            Color spark = (Math.random() > 0.4) ? new Color(251, 191, 36) : new Color(245, 158, 11);
+            particles.add(new Particle(x, y, vx, vy, spark, 3.5, -0.08, 22, false));
+        }
+    }
+
+    public void addDarkCrashSmoke(double x, double y) {
+        for (int i = 0; i < 2; i++) {
+            double vx = (Math.random() - 0.5) * 1.5;
+            double vy = -1.2 - Math.random() * 1.0;
+            Color smoke = new Color(30, 41, 59, 170); // Dark black oily smoke
+            particles.add(new Particle(x, y, vx, vy, smoke, 10.0, 0.6, 45, true));
+        }
+    }
+
     public void addFloatingText(double x, double y, String text, Color color) {
         floatingTexts.add(new FloatingText(x, y, text, color));
     }
