@@ -48,16 +48,16 @@ public class Terrain {
     private double animTime = 0;
 
     public Terrain() {
-        // Dynamically initialize bridges to match advanced hill elevations seamlessly
+        // Dynamically initialize bridges to match progressive difficulty hill elevations
         double b1s = 580, b1e = 960;
         bridges.add(new Bridge(b1s, getBaseHeight(b1s), b1e, getBaseHeight(b1e)));
-        double b2s = 2200, b2e = 2600;
+        double b2s = 1750, b2e = 2150;
         bridges.add(new Bridge(b2s, getBaseHeight(b2s), b2e, getBaseHeight(b2e)));
-        double b3s = 4100, b3e = 4550;
+        double b3s = 2950, b3e = 3400;
         bridges.add(new Bridge(b3s, getBaseHeight(b3s), b3e, getBaseHeight(b3e)));
-        double b4s = 6200, b4e = 6680;
+        double b4s = 4300, b4e = 4800;
         bridges.add(new Bridge(b4s, getBaseHeight(b4s), b4e, getBaseHeight(b4e)));
-        double b5s = 8500, b5e = 9000;
+        double b5s = 5800, b5e = 6350;
         bridges.add(new Bridge(b5s, getBaseHeight(b5s), b5e, getBaseHeight(b5e)));
 
         for (int i = 0; i < 50; i++) {
@@ -66,9 +66,12 @@ public class Terrain {
     }
 
     /**
-     * Advanced continuous height function with dramatic topography:
-     * - Flat starting straightaway.
-     * - Thrilling rolling climbs, rollercoaster dips, launch crests, and steep hillclimb challenges.
+     * Progressive Multi-Stage Difficulty Terrain:
+     * - Flat Runway (0 - 240px)
+     * - Stage 1: Green Countryside (Normal) (0m - 1000m): Gentle rolling hills, easy for beginners.
+     * - Stage 2: Rolling Ridges (Medium) (1000m - 2200m): Steeper climbs, suspension bumps.
+     * - Stage 3: Canyon Cliffs (Hard) (2200m - 3600m): Steep 30° climbs, big jump ramps.
+     * - Stage 4: Mountain Apex (Extreme) (3600m+): Giant peaks, dizzying drops, double whoops!
      */
     public double getBaseHeight(double x) {
         double base = 480.0;
@@ -78,12 +81,33 @@ public class Terrain {
             return base + Math.sin(x * 0.006) * 5.0;
         }
 
-        // Advanced undulating landscape with multi-tier elevation:
-        double mountain = Math.sin(x * 0.00085) * 85.0;  // Grand elevation rise & fall
-        double hillClimb = Math.sin(x * 0.0022) * 68.0; // Steep technical slopes
-        double kicker = Math.cos(x * 0.0048) * 32.0;    // Launch kickers & whoops
+        // Smooth progressive difficulty factor (0.0 to 1.40+)
+        double distM = x / 10.0;
+        double diffFactor;
+        if (distM < 1000) {
+            // Stage 1 (Normal): 0.0 to 0.35
+            diffFactor = 0.35 * (distM / 1000.0);
+        } else if (distM < 2200) {
+            // Stage 2 (Medium): 0.35 to 0.70
+            diffFactor = 0.35 + 0.35 * ((distM - 1000) / 1200.0);
+        } else if (distM < 3600) {
+            // Stage 3 (Hard): 0.70 to 1.00
+            diffFactor = 0.70 + 0.30 * ((distM - 2200) / 1400.0);
+        } else {
+            // Stage 4 (Extreme): 1.00+
+            diffFactor = 1.00 + Math.min(0.40, 0.40 * ((distM - 3600) / 2000.0));
+        }
 
-        return base + mountain + hillClimb + kicker;
+        // Progressive hill wave amplitudes:
+        double mainHillAmp = 42.0 + diffFactor * 85.0;
+        double secondaryAmp = 18.0 + diffFactor * 42.0;
+        double kickerAmp = 6.0 + diffFactor * 26.0;
+
+        double hill1 = Math.sin(x * 0.0016) * mainHillAmp;
+        double hill2 = Math.cos(x * 0.0036) * secondaryAmp;
+        double hill3 = Math.sin(x * 0.0065) * kickerAmp;
+
+        return base + hill1 + hill2 + hill3;
     }
 
     public double getHeightAt(double x) {

@@ -133,9 +133,24 @@ public class DashboardHUD {
         FontMetrics fm2 = g2.getFontMetrics();
         g2.drawString(numStr, cx - fm2.stringWidth(numStr) / 2, 70);
 
-        // Big cyan "STAGE 4" championship banner
-        g2.setFont(new Font("Impact", Font.BOLD, 42));
-        String stageStr = "STAGE " + stage;
+        // Dynamic Stage Championship Banner with Difficulty Tier
+        String stageStr;
+        Color stageColor;
+        if (stage == 1) {
+            stageStr = "STAGE 1 - NORMAL";
+            stageColor = new Color(74, 222, 128);
+        } else if (stage == 2) {
+            stageStr = "STAGE 2 - MEDIUM";
+            stageColor = new Color(56, 189, 248);
+        } else if (stage == 3) {
+            stageStr = "STAGE 3 - HARD";
+            stageColor = new Color(251, 146, 60);
+        } else {
+            stageStr = "STAGE 4 - EXTREME";
+            stageColor = new Color(239, 68, 68);
+        }
+
+        g2.setFont(new Font("Impact", Font.BOLD, 36));
         FontMetrics fm3 = g2.getFontMetrics();
         int sx = cx - fm3.stringWidth(stageStr) / 2;
         int sy = 118;
@@ -144,8 +159,8 @@ public class DashboardHUD {
         g2.setColor(new Color(15, 23, 42));
         g2.drawString(stageStr, sx + 3, sy + 3);
 
-        // Cyan face
-        g2.setColor(new Color(56, 189, 248));
+        // Dynamic stage face color
+        g2.setColor(stageColor);
         g2.drawString(stageStr, sx, sy);
 
         // Low fuel blinking warning

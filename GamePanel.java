@@ -72,9 +72,9 @@ public class GamePanel extends JPanel {
             collectibles.addLast(new Collectible(sx, terrain.getHeightAt(sx) - 75, Collectible.Type.BONUS_STAR));
         }
 
-        score = 340;
+        score = 0;
         coins = 24280;
-        stage = 4;
+        stage = 1;
         distanceMeters = 0;
         gameOver = false;
         gameOverReason = "";
@@ -181,6 +181,31 @@ public class GamePanel extends JPanel {
 
             // Distance travelled
             distanceMeters = Math.max(distanceMeters, (int) (vehicle.x / 10.0));
+
+            // Progressive Multi-Stage Difficulty:
+            // Stage 1: 0m - 1000m (Normal)
+            // Stage 2: 1000m - 2200m (Intermediate)
+            // Stage 3: 2200m - 3600m (Hard)
+            // Stage 4: 3600m+ (Extreme)
+            int prevStage = stage;
+            if (distanceMeters < 1000) {
+                stage = 1;
+            } else if (distanceMeters < 2200) {
+                stage = 2;
+            } else if (distanceMeters < 3600) {
+                stage = 3;
+            } else {
+                stage = 4;
+            }
+
+            if (stage > prevStage) {
+                String stageName = (stage == 2) ? "STAGE 2: ROLLING RIDGES" : (stage == 3) ? "STAGE 3: CANYON CLIFFS" : "STAGE 4: MOUNTAIN APEX";
+                currentStunt = "LEVEL UP! " + stageName + " +2000";
+                stuntDisplayTimer = 95;
+                score += 2000;
+                particles.addCoinSparkles(vehicle.x, vehicle.y - 20);
+                particles.addFloatingText(vehicle.x, vehicle.y - 45, stageName, new Color(253, 224, 71));
+            }
 
             // Check coin and fuel collisions
             checkCollisions();
