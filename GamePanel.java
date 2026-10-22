@@ -39,10 +39,10 @@ public class GamePanel extends JPanel {
     private boolean scoreRecorded = false;
     private JTextField nameField;
 
-    // Game Stats
-    private int score = 340;
-    private int coins = 24280;
-    private int stage = 4;
+    // Game Stats (Fresh run starts from 0)
+    private int score = 0;
+    private int coins = 0;
+    private int stage = 1;
     private int distanceMeters = 0;
     private String currentStunt = null;
     private int stuntDisplayTimer = 0;
@@ -113,7 +113,7 @@ public class GamePanel extends JPanel {
         nameField.setVisible(false);
         nameField.setEnabled(false);
         gameState = GameState.PLAYING;
-        initGame();
+        restartGame();
         requestFocusInWindow();
         repaint();
     }
@@ -160,13 +160,26 @@ public class GamePanel extends JPanel {
         repaint();
     }
 
+    public void restartGame() {
+        // Save current round score to the scoreboard before resetting
+        if (score > 0 && !scoreRecorded) {
+            ScoreboardManager.recordScore(playerName, score, distanceMeters, coins);
+            scoreRecorded = true;
+        }
+        playerBestScore = ScoreboardManager.getPlayerBestScore(playerName);
+        initGame();
+        requestFocusInWindow();
+        repaint();
+    }
+
     private void initGame() {
         terrain = new Terrain();
         particles = new ParticleManager();
         collectibles = new CustomLinkedList<>();
 
-        // Start vehicle at beginning of road
+        // Start vehicle at beginning of road with full fuel
         vehicle = new Vehicle(120, terrain.getHeightAt(120) - 25);
+        vehicle.fuel = 100.0;
 
         // Spawn arc coin clusters along hills and bridges
         spawnCoinArcs();
@@ -181,10 +194,16 @@ public class GamePanel extends JPanel {
             collectibles.addLast(new Collectible(sx, terrain.getHeightAt(sx) - 75, Collectible.Type.BONUS_STAR));
         }
 
+        // Fresh round: Clear previous round details completely
         score = 0;
-        coins = 24280;
+        coins = 0;
         stage = 1;
         distanceMeters = 0;
+        currentStunt = null;
+        stuntDisplayTimer = 0;
+        camX = 0;
+        camY = 0;
+
         gameOver = false;
         gameOverReason = "";
         crashAnimationTimer = 85;
@@ -287,7 +306,7 @@ public class GamePanel extends JPanel {
                 // 3. If Game Over screen
                 if (gameOver) {
                     if (code == KeyEvent.VK_R) {
-                        initGame();
+                        restartGame();
                     } else if (code == KeyEvent.VK_L) {
                         openLeaderboard();
                     } else if (code == KeyEvent.VK_C) {
@@ -318,7 +337,7 @@ public class GamePanel extends JPanel {
                     }
                 }
                 if (code == KeyEvent.VK_R) {
-                    initGame();
+                    restartGame();
                 }
             }
 
@@ -370,7 +389,7 @@ public class GamePanel extends JPanel {
                 // 3. Game Over Screen State
                 if (gameOver) {
                     if (DashboardHUD.isGameOverPlayAgainClicked(w, h, mx, my)) {
-                        initGame();
+                        restartGame();
                     } else if (DashboardHUD.isGameOverLeaderboardClicked(w, h, mx, my)) {
                         openLeaderboard();
                     } else if (DashboardHUD.isGameOverChangeDriverClicked(w, h, mx, my)) {
