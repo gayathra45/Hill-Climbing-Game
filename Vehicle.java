@@ -269,9 +269,9 @@ public class Vehicle {
         }
 
         // -------------------------------------------------------------
-        // NORMAL ACTIVE DRIVING PHYSICS
+        // NORMAL ACTIVE DRIVING PHYSICS (HOOK'S LAW SUSPENSION & WEIGHT TRANSFER)
         // -------------------------------------------------------------
-        double gravity = 0.24;
+        double gravity = (currentType == VehicleType.MONSTER_TRUCK) ? 0.26 : 0.24;
         vy += gravity;
 
         vx *= 0.995;
@@ -281,33 +281,67 @@ public class Vehicle {
         double sinA = Math.sin(angle);
         double halfBase = wheelbase / 2.0;
 
+        // Wheel positions in world space
         double rearX = x - cosA * halfBase;
         double frontX = x + cosA * halfBase;
 
         double groundRearY = terrain.getHeightAt(rearX);
         double groundFrontY = terrain.getHeightAt(frontX);
 
-        double rearWheelBottom = y + sinA * -halfBase + rearSuspensionY + wheelRadius;
+        double rearWheelBottom = y - sinA * halfBase + rearSuspensionY + wheelRadius;
         double frontWheelBottom = y + sinA * halfBase + frontSuspensionY + wheelRadius;
 
-        rearGrounded = (rearWheelBottom >= groundRearY - 2.0);
-        frontGrounded = (frontWheelBottom >= groundFrontY - 2.0);
+        // Ground contact penetrations
+        double rearPenetration = rearWheelBottom - groundRearY;
+        double frontPenetration = frontWheelBottom - groundFrontY;
 
+        rearGrounded = (rearPenetration >= -2.0);
+        frontGrounded = (frontPenetration >= -2.0);
         boolean onGround = rearGrounded || frontGrounded;
+
         double targetRestY = (currentType == VehicleType.MONSTER_TRUCK) ? 18.0 : 12.0;
+        double springStiffness = (currentType == VehicleType.MONSTER_TRUCK) ? 0.42 : 0.46;
+        double springDamping = 0.28;
 
+        // 1. DYNAMIC SUSPENSION SPRING-DAMPER FORCES (Hooke's Law)
+        if (rearGrounded && rearPenetration > 0) {
+            double springForce = rearPenetration * springStiffness;
+            y -= springForce * 0.55;
+            if (vy > 0) vy *= (1.0 - springDamping);
+            rearSuspensionY = Math.max(targetRestY - 6.0, rearSuspensionY - springForce * 0.45);
+        } else {
+            rearSuspensionY += (targetRestY - rearSuspensionY) * 0.18;
+        }
+
+        if (frontGrounded && frontPenetration > 0) {
+            double springForce = frontPenetration * springStiffness;
+            y -= springForce * 0.55;
+            if (vy > 0) vy *= (1.0 - springDamping);
+            frontSuspensionY = Math.max(targetRestY - 6.0, frontSuspensionY - springForce * 0.45);
+        } else {
+            frontSuspensionY += (targetRestY - frontSuspensionY) * 0.18;
+        }
+
+        // 2. CHASSIS GROUND SCRAPING / BOTTOMING OUT
+        double groundAtChassis = terrain.getHeightAt(x);
+        if (y + 4.0 >= groundAtChassis) {
+            y = groundAtChassis - 4.0;
+            if (vy > 0) vy = -vy * 0.25;
+            vx *= 0.96;
+            particles.addCrashSparks(x, y + 2.0);
+        }
+
+        // 3. TERRAIN ANGULAR ALIGNMENT & MOMENTUM
         if (onGround) {
-            double avgGround = (groundRearY + groundFrontY) / 2.0;
-            double targetY = avgGround - wheelRadius - targetRestY * 0.45;
-            y += (targetY - y) * 0.38;
-            if (vy > 0) vy *= 0.2;
-
             double targetSlope = terrain.getSlopeAt(x);
             double diff = targetSlope - angle;
             while (diff > Math.PI) diff -= Math.PI * 2;
             while (diff < -Math.PI) diff += Math.PI * 2;
-            angle += diff * 0.15;
-            vAngle *= 0.5;
+
+            // Torque reaction when both wheels or one wheel is grounded
+            double alignRate = (rearGrounded && frontGrounded) ? 0.16 : 0.08;
+            angle += diff * alignRate;
+            vAngle *= 0.70;
 
             if (wasAirborne && airTimeTimer > 0.8 && Math.abs(diff) < 0.35) {
                 stuntStack.push("PERFECT LANDING! +500");
@@ -315,13 +349,7 @@ public class Vehicle {
             }
             wasAirborne = false;
 
-            if (rearGrounded) rearSuspensionY += (targetRestY - 3.0 - rearSuspensionY) * 0.25;
-            else rearSuspensionY += (targetRestY + 4.0 - rearSuspensionY) * 0.15;
-
-            if (frontGrounded) frontSuspensionY += (targetRestY - 3.0 - frontSuspensionY) * 0.25;
-            else frontSuspensionY += (targetRestY + 4.0 - frontSuspensionY) * 0.15;
-
-            // Stunts
+            // Stunts: Wheelie & Stoppie
             if (rearGrounded && !frontGrounded && vx > 2.0) {
                 wheelieTimer += 0.016;
                 if (wheelieTimer > 0.8) {
@@ -342,19 +370,18 @@ public class Vehicle {
 
         } else {
             wasAirborne = true;
-            rearSuspensionY += (targetRestY + 3.0 - rearSuspensionY) * 0.12;
-            frontSuspensionY += (targetRestY + 3.0 - frontSuspensionY) * 0.12;
         }
 
-        // Engine & Acceleration
+        // 4. ENGINE POWER, TORQUE & WEIGHT TRANSFER (Natural Wheelie on Acceleration)
         double currentSlope = terrain.getSlopeAt(x);
+
         if (gasInput && fuel > 0) {
             fuel = Math.max(0, fuel - 0.026);
             rpm = Math.min(7800, rpm + 120);
 
             if (onGround) {
                 double slopeResistance = -Math.sin(currentSlope) * 0.18;
-                double effectiveForce = (isBoosting ? 0.28 : enginePower) + slopeResistance;
+                double effectiveForce = (isBoosting ? 0.30 : enginePower) + slopeResistance;
                 double currentMax = isBoosting ? maxSpeed * 1.35 : maxSpeed;
 
                 if (vx < currentMax) {
@@ -362,14 +389,20 @@ public class Vehicle {
                     vy += Math.sin(currentSlope) * Math.max(0.04, effectiveForce);
                 }
 
-                rearSuspensionY += 0.8;
-                frontSuspensionY -= 0.6;
+                // Dynamic Weight Transfer: Accelerating squats rear suspension and lifts front
+                rearSuspensionY = Math.min(targetRestY + 3.0, rearSuspensionY + 0.5);
+                frontSuspensionY = Math.max(targetRestY - 4.0, frontSuspensionY - 0.4);
+
+                // Rotational torque: Hard acceleration tips nose up
+                if (rearGrounded && !frontGrounded) {
+                    angle -= 0.014;
+                }
 
                 if (Math.abs(vx) > 1.0) {
                     particles.addDirtSpray(rearX, groundRearY, Math.abs(vx) * 0.25);
                 }
             } else {
-                angle -= airRotateTorque; // Lean back
+                angle -= airRotateTorque; // In-air backward pitch
             }
 
             particles.addExhaustSmoke(rearX - cosA * 12, y + sinA * 12);
@@ -378,27 +411,33 @@ public class Vehicle {
             rpm = Math.max(1000, rpm - 85);
             if (onGround) {
                 vx *= 0.988;
-                vx += Math.sin(currentSlope) * 0.08;
+                vx += Math.sin(currentSlope) * 0.08; // Natural rolling slope gravity
             }
         }
 
-        // Brake / Reverse
+        // 5. BRAKE, STOPPIE NOSE-DIVE & AIR ROTATION
         if (brakeInput) {
             rpm = Math.max(1000, rpm - 60);
             if (onGround) {
                 if (vx > 0.3) {
                     vx -= brakePower;
-                    frontSuspensionY += 0.9;
-                    rearSuspensionY -= 0.6;
+                    // Dynamic Weight Transfer: Braking compresses front suspension (nose dive)
+                    frontSuspensionY = Math.min(targetRestY + 3.0, frontSuspensionY + 0.6);
+                    rearSuspensionY = Math.max(targetRestY - 4.0, rearSuspensionY - 0.4);
+
+                    // Rotational torque: Hard braking tips nose down
+                    if (frontGrounded && !rearGrounded) {
+                        angle += 0.014;
+                    }
                 } else if (vx > maxReverseSpeed) {
                     vx -= 0.09;
                 }
             } else {
-                angle += airRotateTorque; // Lean forward
+                angle += airRotateTorque; // In-air forward pitch
             }
         }
 
-        // Nitro Boost
+        // 6. NITRO BOOST
         if (isBoosting && boostGauge > 0) {
             boostGauge = Math.max(0, boostGauge - 0.7);
             vx += Math.cos(angle) * 0.24;
@@ -413,7 +452,7 @@ public class Vehicle {
         y += vy;
         wheelSpinAngle += (vx / wheelRadius) * 2.2;
 
-        // Flips
+        // 7. AERIAL FLIPS & STUNTS
         if (!onGround) {
             airTimeTimer += 0.016;
             double dTheta = angle - prevAngle;
