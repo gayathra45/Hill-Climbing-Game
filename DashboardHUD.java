@@ -743,9 +743,85 @@ public class DashboardHUD {
     }
 
     private static void drawControlsHint(Graphics2D g2, int screenW, int screenH) {
-        g2.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        g2.setColor(new Color(15, 23, 42, 220));
-        g2.drawString("CONTROLS: GAS (Right/D)  |  BRAKE (Left/A)  |  PAUSE (P/Esc)  |  BOOST (Space)  |  VEHICLE (V)  |  RESTART (R)", 20, screenH - 10);
+        int cx = screenW / 2;
+        int pedalRight = 115;
+        int gaugeLeft = cx - 165;
+        int cardW = 205;
+        int cardH = 46;
+        int cardY = screenH - 68;
+
+        // If screen width permits comfortable spacing between pedals and gauges
+        if (gaugeLeft - pedalRight >= 190) {
+            int lCardX = pedalRight + (gaugeLeft - pedalRight - cardW) / 2;
+            int rCardX = screenW - lCardX - cardW;
+
+            // 1. LEFT CARD: DRIVING & ACCELERATION CONTROLS
+            g2.setColor(new Color(15, 23, 42, 220));
+            g2.fillRoundRect(lCardX, cardY, cardW, cardH, 12, 12);
+            g2.setColor(new Color(56, 189, 248, 140));
+            g2.setStroke(new BasicStroke(1.2f));
+            g2.drawRoundRect(lCardX, cardY, cardW, cardH, 12, 12);
+            g2.setStroke(new BasicStroke(1.0f));
+
+            g2.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            // Line 1: GAS & BRAKE
+            g2.setColor(new Color(56, 189, 248));
+            g2.drawString("GAS: ", lCardX + 10, cardY + 18);
+            g2.setColor(Color.WHITE);
+            g2.drawString("D / →", lCardX + 40, cardY + 18);
+
+            g2.setColor(new Color(251, 146, 60));
+            g2.drawString("BRAKE: ", lCardX + 100, cardY + 18);
+            g2.setColor(Color.WHITE);
+            g2.drawString("A / ←", lCardX + 148, cardY + 18);
+
+            // Line 2: BOOST
+            g2.setColor(new Color(251, 191, 36));
+            g2.drawString("BOOST: ", lCardX + 10, cardY + 36);
+            g2.setColor(Color.WHITE);
+            g2.drawString("Space (Turbo)", lCardX + 54, cardY + 36);
+
+            // 2. RIGHT CARD: UTILITY & SYSTEM CONTROLS
+            g2.setColor(new Color(15, 23, 42, 220));
+            g2.fillRoundRect(rCardX, cardY, cardW, cardH, 12, 12);
+            g2.setColor(new Color(251, 191, 36, 140));
+            g2.setStroke(new BasicStroke(1.2f));
+            g2.drawRoundRect(rCardX, cardY, cardW, cardH, 12, 12);
+            g2.setStroke(new BasicStroke(1.0f));
+
+            // Line 1: PAUSE & RESTART
+            g2.setColor(new Color(56, 189, 248));
+            g2.drawString("PAUSE: ", rCardX + 10, cardY + 18);
+            g2.setColor(Color.WHITE);
+            g2.drawString("P / Esc", rCardX + 54, cardY + 18);
+
+            g2.setColor(new Color(239, 68, 68));
+            g2.drawString("RESTART: ", rCardX + 114, cardY + 18);
+            g2.setColor(Color.WHITE);
+            g2.drawString("R", rCardX + 174, cardY + 18);
+
+            // Line 2: SWITCH VEHICLE
+            g2.setColor(new Color(74, 222, 128));
+            g2.drawString("VEHICLE: ", rCardX + 10, cardY + 36);
+            g2.setColor(Color.WHITE);
+            g2.drawString("V (Cycle Type)", rCardX + 66, cardY + 36);
+
+        } else {
+            // Fallback for smaller screen widths: centered floating pill
+            int pw = Math.min(screenW - 40, 560);
+            int px = (screenW - pw) / 2;
+            int py = screenH - 32;
+            g2.setColor(new Color(15, 23, 42, 230));
+            g2.fillRoundRect(px, py, pw, 26, 10, 10);
+            g2.setColor(new Color(56, 189, 248, 120));
+            g2.drawRoundRect(px, py, pw, 26, 10, 10);
+
+            g2.setFont(new Font("Segoe UI", Font.BOLD, 11));
+            g2.setColor(Color.WHITE);
+            String hText = "GAS: D/→  |  BRAKE: A/←  |  BOOST: Space  |  PAUSE: P  |  SWITCH: V  |  RESTART: R";
+            FontMetrics fm = g2.getFontMetrics();
+            g2.drawString(hText, px + (pw - fm.stringWidth(hText)) / 2, py + 18);
+        }
     }
 
     public static void drawPauseOverlay(Graphics2D g2, int screenW, int screenH) {

@@ -2,6 +2,7 @@
 # PlayerName:Score:DistanceMeters:TotalCoins
 Speed_Demon:58200:1250:4200
 KDU_Champion:42100:980:3100
+Gayya:27825:1784:1050
 Rider_Alex:24500:640:1850
 Turbo_Max:16800:450:1200
 Rookie_Driver:9200:280:850
