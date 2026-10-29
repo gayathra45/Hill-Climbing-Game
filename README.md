@@ -16,11 +16,6 @@ javac *.java
 java Main
 ```
 
-### To Run the DSA Viva Benchmark Test Suite:
-```bash
-java Main --algo
-```
-
 ---
 
 ## 📁 File Structure & Architectural Guide
