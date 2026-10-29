@@ -53,17 +53,6 @@ Hill Climb/
     └── README.md            # Complete Project Guide & Documentation
 ```
 
----
-
-## 🎓 Viva Presentation Guide: 5 Core DSA Components
-
-| DSA Component | Java File | Exact Usage in Game | Time / Space Complexity |
-| :--- | :--- | :--- | :--- |
-| **LIFO Stack** | `CustomStack.java` | Stores airborne stunt combos (Backflip, Wheelie, Air-Time). Popped in reverse chronological order to calculate multiplier combo bonuses. | Push: $O(1)$<br>Pop: $O(1)$ |
-| **FIFO Queue** | `CustomQueue.java` | Streams procedural terrain segments ahead of the driver. Dequeues passed chunks to maintain smooth 60 FPS performance without memory leaks. | Enqueue: $O(1)$<br>Dequeue: $O(1)$ |
-| **Doubly Linked List** | `CustomLinkedList.java` | Manages active coins, fuel canisters, and bonus stars. When collected, nodes are removed dynamically in $O(1)$ without array shifting. | Insertion: $O(1)$<br>Deletion: $O(1)$ |
-| **Selection Sort** | `HillClimbAlgorithms.java` | Real-time sorting of player high scores on the All-Time Leaderboard in descending order. | Time: $O(n^2)$<br>Space: $O(1)$ |
-| **Binary Search** | `HillClimbAlgorithms.java` | Quickly finds the next upcoming distance milestone (500m, 1000m, 1500m...) along the track. | Time: $O(\log n)$<br>Space: $O(1)$ |
 
 ---
 
